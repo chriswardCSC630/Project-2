@@ -16,7 +16,6 @@ class Memory: NSObject, NSCoding {
     var title: String?
     var photo: UIImage?
     var text: String?
-    var taggedUsers: String?
     var date: String?
     
     //MARK: Archiving Points
@@ -31,12 +30,11 @@ class Memory: NSObject, NSCoding {
         static let title = "title"
         static let photo = "photo"
         static let text = "text"
-        static let taggedUsers = "taggedUsers"
         static let date = "date"
     }
     
     //MARK: Initializers
-    init?(title: String, photo: UIImage?, text: String, taggedUsers: String){
+    init?(title: String, photo: UIImage?, text: String){
         // Name must not be empty
         guard !title.isEmpty else {
             return nil
@@ -46,9 +44,14 @@ class Memory: NSObject, NSCoding {
         self.title = title
         self.photo = photo
         self.text = text
-        self.taggedUsers = taggedUsers
         
-        // How should we get the date? from a date picker or something else?
+        // Initialize the Date
+        // Formatting date as a String using DateFormatter from: https://stackoverflow.com/questions/39513258/get-current-date-in-swift-3/39514533
+        
+        let date = Date()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MM/dd/yyyy"
+        self.date = formatter.string(from: date)
     }
     
     //MARK: NSCoding
@@ -56,7 +59,6 @@ class Memory: NSObject, NSCoding {
         aCoder.encode(title, forKey: PropertyKey.title)
         aCoder.encode(photo, forKey: PropertyKey.photo)
         aCoder.encode(text, forKey: PropertyKey.text)
-        aCoder.encode(taggedUsers, forKey: PropertyKey.taggedUsers)
     }
     
     required convenience init?(coder aDecoder: NSCoder) {
@@ -79,11 +81,8 @@ class Memory: NSObject, NSCoding {
                 return nil
         }
         
-        // Because taggedUsers is an optional property of Memory, just use conditional cast.
-        let taggedUsers = aDecoder.decodeObject(forKey: PropertyKey.taggedUsers) as? String
-        
         // Must call designated initializer.
-        self.init(title: title, photo: photo, text: text, taggedUsers: taggedUsers)
+        self.init(title: title, photo: photo, text: text)
     }
 }
 
