@@ -25,10 +25,7 @@ class MemoryTableViewController: UITableViewController {
         
         if savedMemories?.count ?? 0 > 0 {
             memories = savedMemories ?? [Memory]()
-        } else {
-            loadSampleMemories()
         }
-        
     }
 
     // MARK: - Table view data source
@@ -52,8 +49,9 @@ class MemoryTableViewController: UITableViewController {
         
         // Fetches the appropriate memory for the data source layout
         let memory = memories[indexPath.row]
-        cell.nameLabel.text = memory.name
+        cell.title.text = memory.title
         cell.photoImageView.image = memory.photo
+        cell.date.text = memory.date
 
         // Configure the cell...
 
@@ -148,26 +146,6 @@ class MemoryTableViewController: UITableViewController {
     }
     
     //MARK: Private Methods
-    
-    private func loadSampleMemories(){
-        let photo1 = UIImage(named: "sample1")
-        let photo2 = UIImage(named: "sample2")
-        let photo3 = UIImage(named: "sample3")
-        
-        guard let memory1 = Memory(name: "Avatar", photo: photo1) else {
-            fatalError("unable to instantiate memory1")
-        }
-        
-        guard let memory2 = Memory(name: "Titanic", photo: photo2) else {
-            fatalError("unable to instantiate memory2")
-        }
-        
-        guard let memory3 = Memory(name: "Pirates of the Carribean", photo: photo3) else {
-            fatalError("unable to instantiate memory3")
-        }
-        
-        memories += [memory1, memory2, memory3]
-    }
     
     private func saveMemories() {
         let fullPath = getDocumentsDirectory().appendingPathComponent("memories")

@@ -63,6 +63,7 @@
                                 </tableViewCellContentView>
                                 <connections>
                                     <outlet property="Date" destination="iuj-lg-1mC" id="0Um-nS-cD4"/>
+                                    <outlet property="date" destination="iuj-lg-1mC" id="FYE-Oc-LT7"/>
                                     <outlet property="nameLabel" destination="z0X-8k-XhS" id="kKh-zZ-Y5V"/>
                                     <outlet property="photoImageView" destination="q4D-ac-DW3" id="MWB-UT-N43"/>
                                     <segue destination="BYZ-38-t0r" kind="show" identifier="ShowDetail" id="2lS-2O-mnf"/>
@@ -148,9 +149,10 @@
                         </barButtonItem>
                     </navigationItem>
                     <connections>
-                        <outlet property="nameTextField" destination="KpG-vx-s8U" id="ykp-NH-v8q"/>
                         <outlet property="photoImageView" destination="9wf-ci-X2N" id="vwR-a3-9VS"/>
                         <outlet property="saveButton" destination="xq5-qo-eQt" id="xD4-V2-g4C"/>
+                        <outlet property="textTextField" destination="Tb1-dS-O74" id="2lU-2E-2Bp"/>
+                        <outlet property="titleTextField" destination="KpG-vx-s8U" id="WfN-mq-WkT"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>

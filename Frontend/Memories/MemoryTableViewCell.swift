@@ -11,10 +11,9 @@ import UIKit
 class MemoryTableViewCell: UITableViewCell {
     //MARK: Properties
     
-    @IBOutlet weak var nameLabel: UILabel!
+    @IBOutlet weak var title: UILabel!
     @IBOutlet weak var photoImageView: UIImageView!
     @IBOutlet weak var date: UILabel!
-    @IBOutlet weak var taggedUsers: UILabel!
     
     override func awakeFromNib() {
         super.awakeFromNib()

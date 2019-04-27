@@ -12,8 +12,9 @@ import os.log
 class MemoryViewController: UIViewController, UITextFieldDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
     //MARK: Properties
-    @IBOutlet weak var nameTextField: UITextField!
+    @IBOutlet weak var titleTextField: UITextField!
     @IBOutlet weak var photoImageView: UIImageView!
+    @IBOutlet weak var textTextField: UITextField!
     @IBOutlet weak var saveButton: UIBarButtonItem!
     
     var memory: Memory?
@@ -22,17 +23,18 @@ class MemoryViewController: UIViewController, UITextFieldDelegate, UIImagePicker
         super.viewDidLoad()
         
         // Handle the text field's user input through delegate callbacks.
-        nameTextField.delegate = self
+        titleTextField.delegate = self
         
         // Set up views if editting an existing Memory.
         if let memory = memory {
-            navigationItem.title = memory.title
-            nameTextField.text = memory.text
+            navigationItem.title = memory.date
+            titleTextField.text = memory.title
             photoImageView.image = memory.photo
+            textTextField.text = memory.text
             
         }
         
-        // Enable the Save button only if the text field has a valid Memory name.
+        // Enable the Save button only if the text field has a valid Memory title.
         updateSaveButtonState()
     }
     
@@ -58,8 +60,8 @@ class MemoryViewController: UIViewController, UITextFieldDelegate, UIImagePicker
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
         // Dismiss the picker if user cancels.
         dismiss(animated: true, completion: nil)
-        
     }
+    
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         // the info dictionary may contain multiple image representations. The original is used.
         guard let selectedImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage
@@ -96,18 +98,19 @@ class MemoryViewController: UIViewController, UITextFieldDelegate, UIImagePicker
             return
         }
         
-        let name = nameTextField.text ?? ""
+        let title = titleTextField.text ?? ""
         let photo = photoImageView.image
+        let text = textTextField.text ?? ""
         
         // Set the meal to be passed to MealTableViewController after the unwind segue.
-        memory = Memory(name: name, photo: photo)
+        memory = Memory(title: title, photo: photo, text: text)
     }
     
     //MARK: Actions
     @IBAction func selectImageFromPhotoLibrary(_ sender: UITapGestureRecognizer) {
         
         // Hide the keyboard.
-        nameTextField.resignFirstResponder()
+        titleTextField.resignFirstResponder()
         
         // UIImagePickerController is a view controller that lets a user pick media from their photo library.
         let imagePickerController = UIImagePickerController()
@@ -123,8 +126,9 @@ class MemoryViewController: UIViewController, UITextFieldDelegate, UIImagePicker
     //MARK: Private Methods
     private func updateSaveButtonState(){
         // Disable the save button if the text field is empty.
-        let text = nameTextField.text ?? ""
-        saveButton.isEnabled = !text.isEmpty
+        let title = titleTextField.text ?? ""
+        let text = textTextField.text ?? ""
+        saveButton.isEnabled = !(title.isEmpty && text.isEmpty)
     }
 
 }
