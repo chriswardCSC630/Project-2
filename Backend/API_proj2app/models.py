@@ -7,11 +7,13 @@ import json
 # helpful link: https://www.digitalocean.com/community/tutorials/how-to-create-django-models
 # The User model. The user_id is automatically generated
 class User(models.Model):
-    display_name = models.CharField(max_length=30)
+    firstname = models.CharField(max_length=30)
+    lastname = models.CharField(max_length=30)
     username = models.CharField(max_length=30)
+    password = models.CharField(max_length=30)
     # for displaying a user objects
     def __str__(self):
-        return self.username + " (id: " + str(self.id) + ")"
+        return self.username + " (name: " + str(self.firstname) + " " + str(self.lastname) + ")"
 
 class Post(models.Model):
     userID = models.CharField(max_length=20, null=True)
@@ -19,10 +21,10 @@ class Post(models.Model):
     content = models.TextField()
     image = models.ImageField(upload_to='images/') # allows users to upload images: https://wsvincent.com/django-image-uploads/
     date = models.DateTimeField(auto_now_add=True)
-    author = models.TextField()
 
     def __str__(self):
              return "title: " + str(self.title) + " date: " + str(self.date) + " (id:" + str(self.userID) + ")"
+
     class Meta:
         ordering = ['created_on']
 

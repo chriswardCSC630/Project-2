@@ -41,9 +41,6 @@ INSTALLED_APPS = [
 ]
 
 
-# added to handle google API in our models
-GOOGLE_API_KEY = 'AIzaSyCgA_IRJrmSgGhEub0AjyArKHjna2Df2Bo'
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
