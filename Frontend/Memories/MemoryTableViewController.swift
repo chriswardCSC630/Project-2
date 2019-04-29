@@ -13,6 +13,7 @@ class MemoryTableViewController: UITableViewController {
     //MARK: Properties
     var memories =  [Memory]()
     
+    @IBOutlet weak var logoutButton: UIButton!
     // Modified viewDidLoad, saveMemories, getDocumentsDirectory, and loadMemories to solve deprecated tutorial issue based on https://stackoverflow.com/questions/53347426/ios-editor-bug-archiveddata-renamed
     
     override func viewDidLoad() {
@@ -65,6 +66,7 @@ class MemoryTableViewController: UITableViewController {
         return true
     }
 
+    
     // Override to support editing the table view.
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
@@ -74,6 +76,7 @@ class MemoryTableViewController: UITableViewController {
             tableView.deleteRows(at: [indexPath], with: .fade)
         } else if editingStyle == .insert {
             // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
+            
         }    
     }
 
@@ -121,12 +124,33 @@ class MemoryTableViewController: UITableViewController {
             let selectedMemory = memories[indexPath.row]
             memoryDetailViewController.memory = selectedMemory
             
+        case "logoutSegue":
+            return
         default:
             fatalError("Unexpected Segue Identifier; \(String(describing: segue.identifier))")
         }
     }
  
     //MARK: Actions
+    
+    @IBAction func logoutButtonPressed(_ sender: UIButton) {
+        let alert = UIAlertController(title: "Log Out", message: "Are you sure to log out?", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: "Cancel Logout"), style: .cancel, handler: { _ in
+            NSLog("The \"OK\" alert occured.")
+        }))
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Logout", comment: "Confirm Logout"), style: .default, handler: { _ in
+            NSLog("The \"Logout\" alert occured.")
+            self.handleLogout()
+        }))
+        self.present(alert, animated: true, completion: nil)
+    }
+    
+    func handleLogout() {
+        let preferences = UserDefaults.standard
+        preferences.removeObject(forKey: "session")
+        self.performSegue(withIdentifier: "logoutSegue", sender: self.logoutButton)
+        
+    }
     
     @IBAction func unwindToMemoryList(sender: UIStoryboardSegue){
         if let sourceViewController = sender.source as? MemoryViewController, let memory = sourceViewController.memory {
@@ -148,15 +172,15 @@ class MemoryTableViewController: UITableViewController {
     //MARK: Private Methods
     
     private func saveMemories() {
-        let fullPath = getDocumentsDirectory().appendingPathComponent("memories")
-        
-        do {
-            let data = try NSKeyedArchiver.archivedData(withRootObject: memories, requiringSecureCoding: false)
-            try data.write(to: fullPath)
-            os_log("Memories successfully saved.", log: OSLog.default, type: .debug)
-        } catch {
-            os_log("Failed to save memories...", log: OSLog.default, type: .error)
-        }
+//        let fullPath = getDocumentsDirectory().appendingPathComponent("memories")
+//        
+//        do {
+//            let data = try NSKeyedArchiver.archivedData(withRootObject: memories, requiringSecureCoding: false)
+//            try data.write(to: fullPath)
+//            os_log("Memories successfully saved.", log: OSLog.default, type: .debug)
+//        } catch {
+//            os_log("Failed to save memories...", log: OSLog.default, type: .error)
+//        }
     }
     
     func getDocumentsDirectory() -> URL {
