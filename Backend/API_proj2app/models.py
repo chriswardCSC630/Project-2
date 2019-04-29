@@ -22,7 +22,7 @@ class Post(models.Model):
     author = models.TextField()
 
     def __str__(self):
-             return "title: " + str(self.title) + "date: " + str(self.date) + " (id:" + str(self.userID) + ")"
+             return "title: " + str(self.title) + " date: " + str(self.date) + " (id:" + str(self.userID) + ")"
     class Meta:
         ordering = ['created_on']
 
