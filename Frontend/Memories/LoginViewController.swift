@@ -15,6 +15,32 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var _login_button: UIButton!
     @IBOutlet weak var _newUserButton: UIButton!
     
+    var activityIndicator = UIActivityIndicatorView()
+    var strLabel = UILabel()
+    let loadingAnimationView = UIView()
+    
+    func activityIndicator(title: String) {
+        strLabel.removeFromSuperview()
+        activityIndicator.removeFromSuperview()
+        loadingAnimationView.removeFromSuperview()
+        
+        strLabel = UILabel(frame: CGRect(x: 50, y: 0, width: 200, height: 46))
+        strLabel.text = title
+        strLabel.font = .systemFont(ofSize: 14, weight: UIFont.Weight.medium)
+        strLabel.textColor = UIColor(white: 0.9, alpha: 0.7)
+        
+        loadingAnimationView.frame = CGRect(x: view.frame.midX - strLabel.frame.width/2, y: view.frame.midY - strLabel.frame.height/2 , width: 200, height: 46)
+        loadingAnimationView.layer.cornerRadius = 15
+        loadingAnimationView.backgroundColor = UIColor(red:0.27, green:0.27, blue:0.27, alpha:0.7)
+        
+        activityIndicator = UIActivityIndicatorView(style: .white)
+        activityIndicator.frame = CGRect(x: 0, y: 0, width: 46, height: 46)
+        activityIndicator.startAnimating()
+        
+        loadingAnimationView.addSubview(activityIndicator)
+        loadingAnimationView.addSubview(strLabel)
+        self.view.addSubview(loadingAnimationView)
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -135,8 +161,13 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         _username.isEnabled = false
         _password.isEnabled = false
         _login_button.isEnabled = false
-        print("DONEEEE")
-        performSegue(withIdentifier: "userLoggedInSegue", sender: self)
+        
+        self.activityIndicator(title: "Securely logging in...")
+        
+        // Add a delay from: https://stackoverflow.com/questions/38031137/how-to-program-a-delay-in-swift-3
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            self.performSegue(withIdentifier: "userLoggedInSegue", sender: self)
+        }
     }
     
     /*
