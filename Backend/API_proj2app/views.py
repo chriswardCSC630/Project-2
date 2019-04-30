@@ -9,46 +9,84 @@ from API_proj2app.models import *
 
 # Create your views here.
 
-class index(View):
-    # a default webpage to help you navigate
-    def default(request):
-        response = '''
-                <h1>Welcome to our page!</h1>
-                <p>Check out information.txt for help navigating</p>
-                <p style = "font-style: italic">-Katherine and Eric</p>
-                '''
-        # including text file from https://stackoverflow.com/questions/30768056/importing-external-txt-file-in-python
-        f = open('information.txt', 'r')
-        content = f.read()
-        response += '''<p>–––––––––––––––––––––<br>
-                    Information.txt:</p>'''
-        response += "<p>" + str(content) + "</p>"
-        return HttpResponse(response)
+# request data will be storied in request's body
+
+def login(request):
+    # Only POST
+    body_unicode = request.body.decode('utf-8') # from https://stackoverflow.com/questions/29780060/trying-to-parse-request-body-from-post-in-django
+    body = json.loads(body_unicode)
+    contentString = body['content']
+    content = QueryDict(content).dict() # content should be dict now
+
+    username = content["username"]
+    try:
+        user = User.objects.get(username = username)
+    except:
+        return JsonResponse()
+    password = encrypt(content["password"])
+    if (password != user.password):
+        # return HttpError()
+
+    request.session["session_name"] = User.objects.get(username)#set this to the username #learned sessions from session documentation: https://docs.djangoproject.com/en/2.2/topics/http/sessions/
+    #return ____
+def encrypt(password):
+
+
+def newUser(request):
+    # Only POST
+
+# handle all requests at memories
+def handleMemories(request):
+    session_name = request.session["session_name"]
+
+    if request.method == "GET":
+
+    if request.method == "POST":
+
+    if request.method == "PATCH":
+
+    if request.method == "DELETE":
+
 
 class userInfo(View):
 
     # handles only GET requests
     def aoi(request, user_id):
-        return JsonResponse(userInfo.getAllLocations(request,user_id))
+        return JsonResponse(userInfo.getAllInfo(request,user_id))
 
-    def getAllLocations(request,user_id):
+    def getAllInfo(request,user_id):
         data = {}
         usr = User.objects.get(id=user_id)
 
-        # The user's latitude and longitude can be unset, so we have to account for that
-        lat = None
-        lon = None
-        if usr.latitude != None:
-            lat = float(usr.latitude)
-        if usr.longitude != None:
-            lon = float(usr.longitude)
-
-        data['Homebase'] = (lat, lon) # adds the homebase to the list
-        for location in Location.objects.filter(userID=user_id):
-            # creates a list of all the user's locations
-            data[location.place_title] = (float(location.latitude), float(location.longitude))
+        for memory in Memory.objects.filter(userID=user_id):
+            # creates a list of all the user's memory/note titles
+            data[memory.title, memory.content, memory.image, memory.date] = (str(urs.title) + str(usr.content) + str(usr.image) + str(usr.date))
 
         return data # returns a dictionary so it can be used multiple times
+
+
+    # handles only GET requests
+    # def aoi(request, user_id):
+    #     return JsonResponse(userInfo.getAllLocations(request,user_id))
+    #
+    # def getAllLocations(request,user_id):
+    #     data = {}
+    #     usr = User.objects.get(id=user_id)
+    #
+    #     # The user's latitude and longitude can be unset, so we have to account for that
+    #     lat = None
+    #     lon = None
+    #     if usr.latitude != None:
+    #         lat = float(usr.latitude)
+    #     if usr.longitude != None:
+    #         lon = float(usr.longitude)
+    #
+    #     data['Homebase'] = (lat, lon) # adds the homebase to the list
+    #     for location in Location.objects.filter(userID=user_id):
+    #         # creates a list of all the user's locations
+    #         data[location.place_title] = (float(location.latitude), float(location.longitude))
+    #
+    #     return data # returns a dictionary so it can be used multiple times
 
 
     # handles only GET and POST requests
@@ -58,15 +96,15 @@ class userInfo(View):
             data = {}
             for usr in User.objects.all():
                 # fairly straightforward loop to display all users
-                data[usr.id] = str(usr.display_name) + " (@" + str(usr.username) + ")"
+                data[usr.id] = str(usr.firstname) + " " + str(usr.lastname) + " (@" + str(usr.username) + ") " + " " + str(usr.password) "
             return JsonResponse(data)
         elif request.method == "POST":
             # QueryDict from https://docs.djangoproject.com/en/2.2/topics/db/queries/
             data = QueryDict(request.META["QUERY_STRING"]).dict()
-            User.objects.create(display_name=data["display_name"],
+            User.objects.create(firstname=data["firstname"],
+                                lastname=data["lastname"],
                                 username=data["username"],
-                                longitude=data["longitude"],
-                                latitude=data["latitude"])
+                                password=data["password"])
             response = {"Message":"OK (200)"}
         else:
             response = {"Message":"WRONG REQUEST (400)"}
@@ -76,8 +114,14 @@ class userInfo(View):
     def modifyUser(request, user_id):
         return userInfo.modify(request, User.objects.get(id=user_id))
 
-    def modifyLocation(request, user_id, placeTitle):
-        return userInfo.modify(request, Location.objects.get(userID=user_id, place_title = placeTitle))
+    def modifyTitle(request, user_id, title):
+        return userInfo.modify(request, Memory.objects.get(userID=user_id, title = title))
+
+    def modifyContent(request, user_id, content):
+        return userInfo.modify(request, Memory.objects.get(userID=user_id, content = content))
+
+    def modifyImage(request, user_id, image):
+        return userInfo.modify(request, Memory.objects.get(userID=user_id, image = image))
 
     # handles only PATCH and DELETE requests
     def modify(request, obj):
@@ -96,20 +140,19 @@ class userInfo(View):
         return JsonResponse(response)
 
     # handles only GET and POST requests
-    def locations(request):
+    def memories(request):
         # this method follows the structure of users() above
         if request.method == "GET":
             data = {}
             for usr in User.objects.all():
-                data[str(usr.username) + " (id: " + str(usr.id) + ")"] = userInfo.getAllLocations(request,usr.id)
+                data[str(usr.username) + " (id: " + str(usr.id) + ")"] = userInfo.getAllInfo(request,usr.id)
             return JsonResponse(data)
         if request.method == "POST":
             data = QueryDict(request.META["QUERY_STRING"]).dict()
-            Location.objects.create(userID=data["id"],
-                                    place_title=data["place_title"],
-                                    address=data["address"],
-                                    city=data["city"],
-                                    state=data["state"],
-                                    zip_code = data["zip_code"])
+            Memory.objects.create(userID=data["id"],
+                                    title=data["title"],
+                                    content=data["content"],
+                                    image=data["image"],
+                                    date=data["date"])
             response = {"Message":"OK (200)"}
             return JsonResponse(response)
