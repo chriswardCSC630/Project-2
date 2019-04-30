@@ -6,7 +6,7 @@ from django.http import HttpResponse, JsonResponse, QueryDict
 from django.urls import include, path
 from rest_framework import routers
 from API_proj2app.models import *
-
+from django.contrib.auth.models import User
 # Create your views here.
 
 # request data will be storied in request's body
@@ -34,6 +34,7 @@ def encrypt(password):
 
 def newUser(request):
     # Only POST
+    user = User.objects.create_user(firstname, lastname, username, password)
 
 # handle all requests at memories
 def handleMemories(request):
