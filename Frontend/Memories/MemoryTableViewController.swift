@@ -155,15 +155,119 @@ class MemoryTableViewController: UITableViewController {
     @IBAction func unwindToMemoryList(sender: UIStoryboardSegue){
         if let sourceViewController = sender.source as? MemoryViewController, let memory = sourceViewController.memory {
             
+            let title = memory.title!
+            let photo = memory.photo!
+            let text = memory.text!
+            let date = memory.date!
+            
+            let url = URL(string: "http://www.kaleidosblog.com/tutorial/login/api/login")
+            let session = URLSession.shared
+            
+            // Encode photo for POST
+            let photoData: NSData = photo.pngData()! as NSData
+            let photoStringData = photoData.base64EncodedString(options: Data.Base64EncodingOptions.lineLength64Characters)
+            
+            // TO DECODE PHOTO:
+            let dataDecoded:NSData = NSData(base64Encoded: photoStringData, options: NSData.Base64DecodingOptions(rawValue: 0))!
+            let decodedPhoto:UIImage = UIImage(data: dataDecoded as Data)!
+            
+            let request = NSMutableURLRequest(url: url!)
+            
             if let selectedIndexPath = tableView.indexPathForSelectedRow {
                 // Update an existing memory.
                 memories[selectedIndexPath.row] = memory
                 tableView.reloadRows(at: [selectedIndexPath], with: .none)
+                
+                // PATCH the memory to the database
+                request.httpMethod = "PATCH"
+                
+                // paramToSend broken up to allow compiler to check code: error "The compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions" was previously recieved
+                let param1 = "title=" + title + "&photo=" + photoStringData
+                let param2 = "&text=" + text + "&date=" + date
+                let paramToSend = param1 + param2
+                
+                request.httpBody = paramToSend.data(using: String.Encoding.utf8)
+                
+                let task = session.dataTask(with: request as URLRequest) { // completionHandler code is implied
+                    (data, response, error) in
+                    
+                    // check for any errors
+                    guard error == nil else {
+                        print("error retrieving data from server, error:")
+                        print(error as Any)
+                        return
+                    }
+                    // make sure we got data
+                    guard let responseData = data else {
+                        print("Error: did not receive data")
+                        return
+                    }
+                    
+                    let json: Any?
+                    do {
+                        json = try JSONSerialization.jsonObject(with: responseData, options: [])
+                    }
+                    catch {
+                        print("error trying to convert data to JSON")
+                        print(String(data: responseData, encoding: String.Encoding.utf8) ?? "[data not convertible to string]")
+                        return
+                    }
+                    
+                    guard let server_response = json as? NSDictionary else {
+                        print("error trying to convert data to NSDictionary")
+                        return
+                    }
+                }
+                
+                task.resume()
             } else {
                 // Add a new memory.
                 let newIndexPath = IndexPath(row: memories.count, section: 0)
                 memories.append(memory)
                 tableView.insertRows(at: [newIndexPath], with: .automatic)
+                
+                // POST the memory to the database
+                request.httpMethod = "POST"
+                
+                // paramToSend broken up to allow compiler to check code: error "The compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions" was previously recieved
+                let param1 = "title=" + title + "&photo=" + photoStringData
+                let param2 = "&text=" + text + "&date=" + date
+                let paramToSend = param1 + param2
+                
+                request.httpBody = paramToSend.data(using: String.Encoding.utf8)
+                
+                let task = session.dataTask(with: request as URLRequest) { // completionHandler code is implied
+                    (data, response, error) in
+                    
+                    // check for any errors
+                    guard error == nil else {
+                        print("error retrieving data from server, error:")
+                        print(error as Any)
+                        return
+                    }
+                    // make sure we got data
+                    guard let responseData = data else {
+                        print("Error: did not receive data")
+                        return
+                    }
+                    
+                    let json: Any?
+                    do {
+                        json = try JSONSerialization.jsonObject(with: responseData, options: [])
+                    }
+                    catch {
+                        print("error trying to convert data to JSON")
+                        print(String(data: responseData, encoding: String.Encoding.utf8) ?? "[data not convertible to string]")
+                        return
+                    }
+                    
+                    guard let server_response = json as? NSDictionary else {
+                        print("error trying to convert data to NSDictionary")
+                        return
+                    }
+                }
+                
+                task.resume()
             }
             saveMemories()
         }
