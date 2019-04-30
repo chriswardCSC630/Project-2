@@ -35,15 +35,22 @@ def encrypt(password):
 
 def newUser(request):
     # Only POST
-    user = User.objects.create_user(firstname, lastname, username, password)
+
+    # NEED CODE HERE TO ACCESS FIRSTNAME, LASTNAME, USERNAME, and PASSWORD from request
+
+    user = User.objects.create(firstname, lastname, username, password)
 
 # handle all requests at memories
 def handleMemories(request):
     session_name = request.session["session_name"]
 
     if request.method == "GET":
-        memories = User.objects.all().values('title', 'content', 'image', 'date', '')
+        data = {}
 
+        for memory in Memory.objects.filter(username = session_name):
+            data[memory.title] = {"content": memory.content, "image": memory.image, "date": memory.date}
+
+        return JsonResponse(data)
 
     if request.method == "POST":
 
