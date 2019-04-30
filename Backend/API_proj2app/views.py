@@ -29,6 +29,7 @@ def login(request):
 
     request.session["session_name"] = User.objects.get(username)#set this to the username #learned sessions from session documentation: https://docs.djangoproject.com/en/2.2/topics/http/sessions/
     #return ____
+
 def encrypt(password):
 
 
@@ -40,6 +41,8 @@ def handleMemories(request):
     session_name = request.session["session_name"]
 
     if request.method == "GET":
+        memories = User.objects.all().values('title', 'content', 'image', 'date', '')
+
 
     if request.method == "POST":
 

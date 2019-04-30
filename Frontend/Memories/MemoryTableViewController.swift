@@ -205,5 +205,4 @@ class MemoryTableViewController: UITableViewController {
         }
         return nil
     }
-
 }
