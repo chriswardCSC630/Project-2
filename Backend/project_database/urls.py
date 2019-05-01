@@ -21,7 +21,7 @@ from API_proj2app.views import *
 
 urlpatterns = [
     path('', index),
-    path('login/', login),
-    # path('newUser/', userInfo.aoi, name='poi'),
-    # path('memories/', userInfo.users, name = "users")
+    path('login/', requestHandlers.login),
+    path('newUser/', requestHandlers.newUser),
+    path('memories/', requestHandlers.aoi.handleMemories)
 ]
