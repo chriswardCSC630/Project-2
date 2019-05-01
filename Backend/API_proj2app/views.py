@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 
 # request data will be storied in request's body
 def index(request):
-    return "welcome"
+    return HttpResponse("welcome")
 
 def login(request):
     # Only POST
