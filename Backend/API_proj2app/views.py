@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 class requestHandlers(View):
     # request data will be storied in request's body
     def index(request):
-        return HttpResponse("welcome")
+        return HttpResponse("Welcome")
 
     # handle all requests at .../login/
     def login(request):
@@ -49,7 +49,7 @@ class requestHandlers(View):
              # Create the new user
              User.objects.create(firstname, lastname, username, password)
 
-             return JsonResponse({"message": "POSTed"})
+             return JsonResponse(status=201) #201: The request has been fulfilled, resulting in the creation of a new resource.
 
 
     # handle all requests at .../login/
@@ -62,9 +62,11 @@ class requestHandlers(View):
         if request.method == "GET":
             data = {}
 
+            # Propogate memories to return to frontend
             for memory in Memory.objects.filter(username = session_name):
                 data[memory.id] = {"title": memory.title, "content": memory.content, "image": memory.image, "date": memory.date}
 
+            # Return data to frontend
             return JsonResponse(data, status=200)
 
          elif request.method == "POST":
@@ -78,7 +80,7 @@ class requestHandlers(View):
              memory = Memory.objects.create(firstname, lastname, username, password)
 
              # Return standard JSON response with id so frontend can set id
-             return JsonResponse({"message": "PATCHed", "id": memory.id})
+             return JsonResponse({"id": memory.id}, status=201) #201: The request has been fulfilled, resulting in the creation of a new resource.
 
          elif request.method == "PATCH":
              # Access memory data to update as well as the memory id
@@ -95,11 +97,11 @@ class requestHandlers(View):
             # Save the updated memory
             memory.save()
 
-            return JsonResponse({"message": "PATCHed"})
+            return JsonResponse(status=204) #204: The server successfully processed the request and is not returning any content
 
          elif request.method == "DELETE":
             id = content["id"]
             # Delete memory based on id
             Memory.objects.get(id=id).delete()
 
-            return JsonResponse({"message": "DELETEd"})
+            return JsonResponse(status=200)
