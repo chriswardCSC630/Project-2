@@ -54,7 +54,6 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'project_database.urls'
 
 
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -126,6 +125,9 @@ USE_L10N = True
 
 USE_TZ = True
 
+# Media root created to allow users to upload images: https://wsvincent.com/django-image-uploads/
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 # Static files (CSS, JavaScript, Images)
