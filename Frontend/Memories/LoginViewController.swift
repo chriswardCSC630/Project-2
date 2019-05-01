@@ -75,7 +75,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
 //        _username.isEnabled = false // disables both buttons
 //        _password.isEnabled = false
         
-        let url = URL(string: "http://www.kaleidosblog.com/tutorial/login/api/login")
+        let url = URL(string: "https://fullstack-project-2.herokuapp.com/login/")
         let session = URLSession.shared
         
         let request = NSMutableURLRequest(url: url!)

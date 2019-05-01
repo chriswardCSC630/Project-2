@@ -16,13 +16,14 @@ class User(models.Model):
         return self.username + " (name: " + self.firstname + " " + self.lastname + ")"
 
 class Memory(models.Model):
-    userID = models.CharField(max_length=20, null=True)
+    username = models.CharField(max_length=30)
     title = models.CharField(max_length=255)
     content = models.TextField()
     image = models.ImageField(upload_to='images/') # allows users to upload images: https://wsvincent.com/django-image-uploads/
-    date = models.DateTimeField(auto_now_add=True)
+    date = models.CharField(max_length=255)
 
     def __str__(self):
+
              return "title: " + self.title + " date: " + str(self.date) + " (id:" + str(self.userID) + ")"
 
     # orders posts by date created : https://www.digitalocean.com/community/tutorials/how-to-create-django-models
