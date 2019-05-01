@@ -19,7 +19,7 @@ class Memory(models.Model):
     username = models.CharField(max_length=30)
     title = models.CharField(max_length=255)
     content = models.TextField()
-    image = models.TextField()
+    image = models.TextField() # models.ImageField(upload_to='images/') --> alternatively: https://wsvincent.com/django-image-uploads/
     date = models.CharField(max_length=255)
 
     def __str__(self):

@@ -39,12 +39,13 @@ class requestHandlers(View):
     # handle all requests at .../newUser/
      def newUser(request):
          # Only POST
-         content = QueryDict(request.body.decode('utf-8')).dict()
+         content = QueryDict(request.body.decode('utf-8')).dict() #access content from request
          lastname = content["lastname"]
          firstname = content["firstname"]
          username = content ["username"]
          password = conetnt ["password"]
 
+<<<<<<< Updated upstream
          if request.method == "POST":
             for user in User.objects.filter(username = user.get(username)):
                 if username == user.get(username):
@@ -57,6 +58,22 @@ class requestHandlers(View):
 
              new_user.save()
              return JsonResponse({'status':'true', 'message':"Your account has been created, please login"}, status=201) #201 -> new resource created
+=======
+         # data = {}
+         # data = QueryDict(request.META["QUERY_STRING"]).dict()
+
+         if request.method == "POST":
+             try:
+                 new_user = User.objects.create(firstname = firstname, lastname = lastname, username = username, password = password)
+             except:
+                 return JsonResponse({'status':'false','message':"Invalid username or password"}, status=406)
+
+             for user in User.objects.all():
+                 if username == user.objects.get(username):
+                     return JsonResponse({'status':'false','message':"This username is already in use"}, status=406)
+             new_user.save()
+        return JsonResponse({'status':'true','message':"Your account has been created, please login"}, status=200)
+>>>>>>> Stashed changes
 
 
     # handle all requests at .../memories/
@@ -82,16 +99,23 @@ class requestHandlers(View):
              text = content["text"]
              date = content["date"]
 
+<<<<<<< Updated upstream
              # Create a memory and save its reference to access id
              memory = Memory.object.create(title = title, image = photo, content = text, date = date)
 
              # Return id as part of JsonResponse so frontend can set id
              return JsonResponse({'status':'false', "message": "memory POSTed", "id": memory.id}, status=201) #201 -> new resource created
+=======
+             mem = Memory.object.create(title = title, image = photo, content = text, date = date)
+             mem.save()
+             return JsonResponse(data, status=200)
+>>>>>>> Stashed changes
 
          elif request.method == "PATCH":
              # Access memory data to update as well as the memory id
              data = {"title": content["title"], "photo": content["photo"], "text": content["text"], "date": content["date"]}
              id = content["id"]
+<<<<<<< Updated upstream
 
              # Access memory based on id
              memory = Memory.objects.get(id=id)
@@ -103,12 +127,23 @@ class requestHandlers(View):
 
              data["status"] = "true"
              data["message"] = "memory PATCHed"
+=======
+             Memory.data.update(data) #
+>>>>>>> Stashed changes
              return JsonResponse(data, status=200)
 
          elif request.method == "DELETE":
             id = content["id"]
+<<<<<<< Updated upstream
 
             # Delete memory based on id
             Memory.objects.get(id=id).delete()
 
             return JsonResponse({"status": "true", "message": "memory DELETEd"}, status=200)
+=======
+            for memory in Memory.objects.filter(username = session_name):
+                if memory.id == id:
+                    memory.delete()
+                    return JsonResponse({'status':'true','message':"Your memory has been deleted"}, status=200)
+            return JsonResponse({'status':'false','message':"Failed to delete"}, status=406)
+>>>>>>> Stashed changes
