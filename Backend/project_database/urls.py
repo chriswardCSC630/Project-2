@@ -20,8 +20,8 @@ from API_proj2app.views import *
 # Fairly standard url requests
 
 urlpatterns = [
-    path('', index.default),
-    path('login/', admin.site.urls),
-    path('newUser/', userInfo.aoi, name='poi'),
-    path('memories/', userInfo.users, name = "users")
+    path('', index),
+    path('login/', login),
+    # path('newUser/', userInfo.aoi, name='poi'),
+    # path('memories/', userInfo.users, name = "users")
 ]
