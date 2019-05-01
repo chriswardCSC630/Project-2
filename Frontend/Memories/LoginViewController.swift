@@ -98,6 +98,13 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                 return
             }
             
+            guard let httpResponse = response as? HTTPURLResponse else {
+                print("unexpected response")
+                return
+            }
+            
+            print(httpResponse.statusCode)
+            
             let json: Any?
             do {
                 json = try JSONSerialization.jsonObject(with: responseData, options: [])
@@ -112,16 +119,14 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                 print("error trying to convert data to NSDictionary")
                 return
             }
+            print(server_response)
+            print(server_response.allKeys)
             
-            if let data_block = server_response["data"] as? NSDictionary {
-                if let session_data = data_block["session"] as? String {
-                    let preferences = UserDefaults.standard
-                    preferences.set(session_data, forKey: "session") // updates userDefaults to this session
-                    DispatchQueue.main.async (
-                        execute: self.LoginDone
-                    )
-                }
-            }
+//            let preferences = UserDefaults.standard
+//            preferences.set(session_data, forKey: "session") // updates userDefaults to this session
+            DispatchQueue.main.async (
+                execute: self.LoginDone
+            )
         }
         
         task.resume()

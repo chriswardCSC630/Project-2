@@ -17,6 +17,7 @@ class Memory: NSObject, NSCoding {
     var photo: UIImage?
     var text: String?
     var date: String?
+    var id: String?
     
     //MARK: Archiving Points
     
@@ -31,6 +32,7 @@ class Memory: NSObject, NSCoding {
         static let photo = "photo"
         static let text = "text"
         static let date = "date"
+        static let id = "id"
     }
     
     //MARK: Initializers
@@ -52,6 +54,9 @@ class Memory: NSObject, NSCoding {
         let formatter = DateFormatter()
         formatter.dateFormat = "MM/dd/yyyy"
         self.date = formatter.string(from: date)
+        
+        // id will start as an empty string and will be set when memory is POSTed or from GET of all memories
+        let id = ""
     }
     
     //MARK: NSCoding
