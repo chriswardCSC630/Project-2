@@ -15,10 +15,9 @@ def index(request):
 
 def login(request):
     # Only POST
-    # return request.body
-    body = json.loads(request.body.decode('utf-8')) # from https://stackoverflow.com/questions/29780060/trying-to-parse-request-body-from-post-in-django
+# from https://stackoverflow.com/questions/29780060/trying-to-parse-request-body-from-post-in-django
 
-    content = QueryDict(body).dict() # content should be dict now
+    content = QueryDict(request.body.decode('utf-8')).dict() # content should be dict now
 
     username = content["username"]
     try:
@@ -30,7 +29,7 @@ def login(request):
         return JsonResponse({'status':'false','message':"Invalid password"}, status=406)
 
     request.session["session_name"] = User.objects.get(username)#set this to the username #learned sessions from session documentation: https://docs.djangoproject.com/en/2.2/topics/http/sessions/
-    return JsonResponse({'status':'false','message':"Logged in"}, status=200)
+    return JsonResponse({'status':'true','message':"Logged in"}, status=200)
 def encrypt(password):
     return password
 #
