@@ -37,19 +37,6 @@ class requestHandlers(View):
 
     # handle all requests at .../newUser/
      def newUser(request):
-         # Only POSTing to .../newUser/
-         if request.method == "POST":
-             # Access user data in request
-             content = QueryDict(request.body.decode('utf-8')).dict()
-             firstname = content["firstname"]
-             lastname = content["lastname"]
-             username = content["username"]
-             password = content["password"]
-
-             # Create the new user
-             User.objects.create(firstname, lastname, username, password)
-
-             return JsonResponse(status=201) #201: The request has been fulfilled, resulting in the creation of a new resource.
 
 
     # handle all requests at .../login/
@@ -75,33 +62,11 @@ class requestHandlers(View):
              photo = content["photo"]
              text = content["text"]
              date = content["date"]
-
-             # Create a new memory and grab its reference
-             memory = Memory.objects.create(firstname, lastname, username, password)
-
-             # Return standard JSON response with id so frontend can set id
-             return JsonResponse({"id": memory.id}, status=201) #201: The request has been fulfilled, resulting in the creation of a new resource.
-
+         
          elif request.method == "PATCH":
              # Access memory data to update as well as the memory id
              data = {"title": content["title"], "photo": content["photo"], "text": content["text"], "date": content["date"]}
              id = content["id"]
 
-             # Access memory based on id
-             memory = Memory.objects.get(id=id)
-
-             # Update memory
-             for (key, value) in data.items():
-                setattr(memory, key, value)
-
-            # Save the updated memory
-            memory.save()
-
-            return JsonResponse(status=204) #204: The server successfully processed the request and is not returning any content
-
          elif request.method == "DELETE":
             id = content["id"]
-            # Delete memory based on id
-            Memory.objects.get(id=id).delete()
-
-            return JsonResponse(status=200)
