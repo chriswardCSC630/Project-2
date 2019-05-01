@@ -188,38 +188,8 @@ class MemoryTableViewController: UITableViewController {
                 
                 request.httpBody = paramToSend.data(using: String.Encoding.utf8)
                 
-                let task = session.dataTask(with: request as URLRequest) { // completionHandler code is implied
-                    (data, response, error) in
-                    
-                    // check for any errors
-                    guard error == nil else {
-                        print("error retrieving data from server, error:")
-                        print(error as Any)
-                        return
-                    }
-                    // make sure we got data
-                    guard let responseData = data else {
-                        print("Error: did not receive data")
-                        return
-                    }
-                    
-                    let json: Any?
-                    do {
-                        json = try JSONSerialization.jsonObject(with: responseData, options: [])
-                    }
-                    catch {
-                        print("error trying to convert data to JSON")
-                        print(String(data: responseData, encoding: String.Encoding.utf8) ?? "[data not convertible to string]")
-                        return
-                    }
-                    
-                    guard let server_response = json as? NSDictionary else {
-                        print("error trying to convert data to NSDictionary")
-                        return
-                    }
-                }
+                jsonRequest(request: request, session: session)
                 
-                task.resume()
             } else {
                 // Add a new memory.
                 let newIndexPath = IndexPath(row: memories.count, section: 0)
@@ -236,38 +206,7 @@ class MemoryTableViewController: UITableViewController {
                 
                 request.httpBody = paramToSend.data(using: String.Encoding.utf8)
                 
-                let task = session.dataTask(with: request as URLRequest) { // completionHandler code is implied
-                    (data, response, error) in
-                    
-                    // check for any errors
-                    guard error == nil else {
-                        print("error retrieving data from server, error:")
-                        print(error as Any)
-                        return
-                    }
-                    // make sure we got data
-                    guard let responseData = data else {
-                        print("Error: did not receive data")
-                        return
-                    }
-                    
-                    let json: Any?
-                    do {
-                        json = try JSONSerialization.jsonObject(with: responseData, options: [])
-                    }
-                    catch {
-                        print("error trying to convert data to JSON")
-                        print(String(data: responseData, encoding: String.Encoding.utf8) ?? "[data not convertible to string]")
-                        return
-                    }
-                    
-                    guard let server_response = json as? NSDictionary else {
-                        print("error trying to convert data to NSDictionary")
-                        return
-                    }
-                }
-                
-                task.resume()
+                jsonRequest(request: request, session: session)
             }
             saveMemories()
         }
@@ -285,6 +224,49 @@ class MemoryTableViewController: UITableViewController {
 //        } catch {
 //            os_log("Failed to save memories...", log: OSLog.default, type: .error)
 //        }
+    }
+    
+    private func jsonRequest(request: NSMutableURLRequest, session: URLSession) {
+        let task = session.dataTask(with: request as URLRequest) { // completionHandler code is implied
+            (data, response, error) in
+            
+            // check for any errors
+            guard error == nil else {
+                print("error retrieving data from server, error:")
+                print(error as Any)
+                return
+            }
+            // make sure we got data
+            guard let responseData = data else {
+                print("Error: did not receive data")
+                return
+            }
+            
+            let json: Any?
+            do {
+                json = try JSONSerialization.jsonObject(with: responseData, options: [])
+            }
+            catch {
+                print("error trying to convert data to JSON")
+                print(String(data: responseData, encoding: String.Encoding.utf8) ?? "[data not convertible to string]")
+                return
+            }
+            
+            guard let serverResponse = json as? NSDictionary else {
+                print("error trying to convert data to NSDictionary")
+                return
+            }
+            
+            
+        }
+        task.resume()
+        
+        
+    }
+    
+    private func updateMemoryID(serverResponse: NSDictionary, memory: Memory) -> Memory {
+        guard memory.id = serverResponse["id"]
+        return memory
     }
     
     func getDocumentsDirectory() -> URL {
