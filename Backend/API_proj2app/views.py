@@ -32,17 +32,18 @@ def login(request):
     return JsonResponse({'status':'true','message':"Logged in"}, status=200)
 def encrypt(password):
     return password
-#
-# def newUser(request):
-#     # Only POST
-#
-#     # NEED CODE HERE TO ACCESS FIRSTNAME, LASTNAME, USERNAME, and PASSWORD from request
-#
-#     user = User.objects.create(firstname, lastname, username, password)
+
+ def newUser(request):
+     # Only POST
+
+     # NEED CODE HERE TO ACCESS FIRSTNAME, LASTNAME, USERNAME, and PASSWORD from request
+
+     user = User.objects.create(firstname, lastname, username, password)
 
 # handle all requests at memories
 def handleMemories(request):
     session_name = request.session["session_name"]
+    content = QueryDict(request.body.decode('utf-8')).dict()
 
     if request.method == "GET":
         data = {}
@@ -51,9 +52,20 @@ def handleMemories(request):
             data[memory.id] = {"title": memory.title, "content": memory.content, "image": memory.image, "date": memory.date}
 
         return JsonResponse(data, status=200)
-    #
-    # if request.method == "POST":
-    #
-    # if request.method == "PATCH":
-    #
-    # if request.method == "DELETE":
+    
+     elif request.method == "POST":
+        title = content["title"]
+        photo = content["photo"]
+        text = content["text"]
+        date = content["date"]
+    
+    
+     elif request.method == "PATCH":
+         title = content["title"]
+         photo = content["photo"]
+         text = content["text"]
+         date = content["date"]
+         id = content["id"]
+
+     elif request.method == "DELETE":
+        id = content["id"]
