@@ -23,5 +23,5 @@ urlpatterns = [
     path('', index),
     path('login/', requestHandlers.login),
     path('newUser/', requestHandlers.newUser),
-    path('memories/', requestHandlers.aoi.handleMemories)
+    path('memories/', requestHandlers.handleMemories)
 ]

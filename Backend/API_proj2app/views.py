@@ -45,25 +45,21 @@ class requestHandlers(View):
          username = content ["username"]
          password = conetnt ["password"]
 
-         # data = {}
-         # data = QueryDict(request.META["QUERY_STRING"]).dict()
-
-         try:
-             new_user = User.objects.create(firstname = firstname, lastname = lastname, username = username, password = password)
-         except:
-             return JsonResponse({'status':'false','message':"Invalid username or password"}, status=406)
-
          if request.method == "POST":
+            for user in User.objects.filter(username = user.get(username)):
+                if username == user.get(username):
+                    return JsonResponse({'status':'false','message':"This username is already in use"}, status=406)
 
-             for user in User.objects.filter(username = user.get(username)):
-                 if username == user.get(username):
-                     return JsonResponse({'status':'false','message':"This username is already in use"}, status=406)
+             try:
+                 new_user = User.objects.create(firstname = firstname, lastname = lastname, username = username, password = password)
+             except:
+                 return JsonResponse({'status':'false', 'message':"Invalid username or password"}, status=406)
+
              new_user.save()
-        return JsonResponse({'status':'true','message':"Your account has been created, please login"}, status=200)
-         # NEED CODE HERE TO ACCESS FIRSTNAME, LASTNAME, USERNAME, and PASSWORD from request
+             return JsonResponse({'status':'true', 'message':"Your account has been created, please login"}, status=201) #201 -> new resource created
 
 
-    # handle all requests at .../login/
+    # handle all requests at .../memories/
     def handleMemories(request):
         session_name = request.session["session_name"]
 
@@ -86,19 +82,33 @@ class requestHandlers(View):
              text = content["text"]
              date = content["date"]
 
-             Memory.object.create(title = title, image = photo, content = text, date = date)
-             return JsonResponse(data, status=200)
+             # Create a memory and save its reference to access id
+             memory = Memory.object.create(title = title, image = photo, content = text, date = date)
+
+             # Return id as part of JsonResponse so frontend can set id
+             return JsonResponse({'status':'false', "message": "memory POSTed", "id": memory.id}, status=201) #201 -> new resource created
 
          elif request.method == "PATCH":
              # Access memory data to update as well as the memory id
              data = {"title": content["title"], "photo": content["photo"], "text": content["text"], "date": content["date"]}
              id = content["id"]
-             Memory.data.update(data)
+
+             # Access memory based on id
+             memory = Memory.objects.get(id=id)
+
+             # Update memory
+             for (key, value) in data.items():
+                 setattr(object, key, value)
+             object.save() #save the modified object
+
+             data["status"] = "true"
+             data["message"] = "memory PATCHed"
              return JsonResponse(data, status=200)
 
          elif request.method == "DELETE":
             id = content["id"]
-            for memory in Memory.objects.filter(username = session_name):
-                if memory.id == id:
-                    memory.delete()
-                    return JsonResponse({"Message":"DELETED (200)"})
+
+            # Delete memory based on id
+            Memory.objects.get(id=id).delete()
+
+            return JsonResponse({"status": "true", "message": "memory DELETEd"}, status=200)
