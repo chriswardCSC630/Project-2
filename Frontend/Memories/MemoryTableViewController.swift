@@ -153,12 +153,13 @@ class MemoryTableViewController: UITableViewController {
     }
     
     @IBAction func unwindToMemoryList(sender: UIStoryboardSegue){
-        if let sourceViewController = sender.source as? MemoryViewController, let memory = sourceViewController.memory {
+        if let sourceViewController = sender.source as? MemoryViewController, var memory = sourceViewController.memory {
             
             let title = memory.title!
             let photo = memory.photo!
             let text = memory.text!
             let date = memory.date!
+            let id = memory.id!
             
             let url = URL(string: "http://www.kaleidosblog.com/tutorial/login/api/login")
             let session = URLSession.shared
@@ -174,28 +175,53 @@ class MemoryTableViewController: UITableViewController {
             let request = NSMutableURLRequest(url: url!)
             
             if let selectedIndexPath = tableView.indexPathForSelectedRow {
-                // Update an existing memory.
-                memories[selectedIndexPath.row] = memory
-                tableView.reloadRows(at: [selectedIndexPath], with: .none)
-                
                 // PATCH the memory to the database
                 request.httpMethod = "PATCH"
                 
                 // paramToSend broken up to allow compiler to check code: error "The compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions" was previously recieved
                 let param1 = "title=" + title + "&photo=" + photoStringData
-                let param2 = "&text=" + text + "&date=" + date
+                let param2 = "&text=" + text + "&date=" + date + "&id=" + id
                 let paramToSend = param1 + param2
                 
                 request.httpBody = paramToSend.data(using: String.Encoding.utf8)
                 
-                jsonRequest(request: request, session: session)
+                let task = session.dataTask(with: request as URLRequest) { // completionHandler code is implied
+                    (data, response, error) in
+                    
+                    // check for any errors
+                    guard error == nil else {
+                        print("error retrieving data from server, error:")
+                        print(error as Any)
+                        return
+                    }
+                    // make sure we got data
+                    guard let responseData = data else {
+                        print("Error: did not receive data")
+                        return
+                    }
+                    
+                    let json: Any?
+                    do {
+                        json = try JSONSerialization.jsonObject(with: responseData, options: [])
+                    }
+                    catch {
+                        print("error trying to convert data to JSON")
+                        print(String(data: responseData, encoding: String.Encoding.utf8) ?? "[data not convertible to string]")
+                        return
+                    }
+                    
+                    guard let serverResponse = json as? NSDictionary else {
+                        print("error trying to convert data to NSDictionary")
+                        return
+                    }
+                }
+                task.resume()
+                
+                // Update an existing memory.
+                memories[selectedIndexPath.row] = memory
+                tableView.reloadRows(at: [selectedIndexPath], with: .none)
                 
             } else {
-                // Add a new memory.
-                let newIndexPath = IndexPath(row: memories.count, section: 0)
-                memories.append(memory)
-                tableView.insertRows(at: [newIndexPath], with: .automatic)
-                
                 // POST the memory to the database
                 request.httpMethod = "POST"
                 
@@ -206,9 +232,46 @@ class MemoryTableViewController: UITableViewController {
                 
                 request.httpBody = paramToSend.data(using: String.Encoding.utf8)
                 
-                jsonRequest(request: request, session: session)
+                let task = session.dataTask(with: request as URLRequest) { // completionHandler code is implied
+                    (data, response, error) in
+                    
+                    // check for any errors
+                    guard error == nil else {
+                        print("error retrieving data from server, error:")
+                        print(error as Any)
+                        return
+                    }
+                    // make sure we got data
+                    guard let responseData = data else {
+                        print("Error: did not receive data")
+                        return
+                    }
+                    
+                    let json: Any?
+                    do {
+                        json = try JSONSerialization.jsonObject(with: responseData, options: [])
+                    }
+                    catch {
+                        print("error trying to convert data to JSON")
+                        print(String(data: responseData, encoding: String.Encoding.utf8) ?? "[data not convertible to string]")
+                        return
+                    }
+                    
+                    guard let serverResponse = json as? NSDictionary else {
+                        print("error trying to convert data to NSDictionary")
+                        return
+                    }
+                    
+                    memory = self.updateMemoryID(serverResponse: serverResponse, memory: memory)
+                }
+                task.resume()
+                
+                // Add a new memory.
+                let newIndexPath = IndexPath(row: memories.count, section: 0)
+                memories.append(memory)
+                tableView.insertRows(at: [newIndexPath], with: .automatic)
+                saveMemories()
             }
-            saveMemories()
         }
     }
     
@@ -226,46 +289,12 @@ class MemoryTableViewController: UITableViewController {
 //        }
     }
     
-    private func jsonRequest(request: NSMutableURLRequest, session: URLSession) {
-        let task = session.dataTask(with: request as URLRequest) { // completionHandler code is implied
-            (data, response, error) in
-            
-            // check for any errors
-            guard error == nil else {
-                print("error retrieving data from server, error:")
-                print(error as Any)
-                return
-            }
-            // make sure we got data
-            guard let responseData = data else {
-                print("Error: did not receive data")
-                return
-            }
-            
-            let json: Any?
-            do {
-                json = try JSONSerialization.jsonObject(with: responseData, options: [])
-            }
-            catch {
-                print("error trying to convert data to JSON")
-                print(String(data: responseData, encoding: String.Encoding.utf8) ?? "[data not convertible to string]")
-                return
-            }
-            
-            guard let serverResponse = json as? NSDictionary else {
-                print("error trying to convert data to NSDictionary")
-                return
-            }
-            
-            
-        }
-        task.resume()
-        
-        
-    }
-    
     private func updateMemoryID(serverResponse: NSDictionary, memory: Memory) -> Memory {
-        guard memory.id = serverResponse["id"]
+        guard let id = serverResponse["id"] as? String else {
+            print("No id")
+            return memory
+        }
+        memory.id = id
         return memory
     }
     
