@@ -20,7 +20,7 @@ from API_proj2app.views import *
 # Fairly standard url requests
 
 urlpatterns = [
-    path('', index),
+    path('', requestHandlers.index),
     path('login/', requestHandlers.login),
     path('newUser/', requestHandlers.newUser),
     path('memories/', requestHandlers.handleMemories)

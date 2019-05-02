@@ -56,7 +56,7 @@ class Memory: NSObject, NSCoding {
         self.date = formatter.string(from: date)
         
         // id will start as an empty string and will be set when memory is POSTed or from GET of all memories
-        let id = ""
+        id = ""
     }
     
     //MARK: NSCoding

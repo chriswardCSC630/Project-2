@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import AudioToolbox
 
 class NewUserViewController: UIViewController {
 
@@ -17,6 +18,7 @@ class NewUserViewController: UIViewController {
     @IBOutlet weak var username: UITextField!
     @IBOutlet weak var password: UITextField!
     @IBOutlet weak var confirmPassword: UITextField!
+    @IBOutlet weak var errorLabel: UILabel!
     
     let badColor: UIColor = UIColor(displayP3Red: 1, green: 0, blue: 0, alpha: 0.3)
     let goodColor: UIColor = UIColor(displayP3Red: 0, green: 1, blue: 0, alpha: 0.3)
@@ -24,6 +26,35 @@ class NewUserViewController: UIViewController {
     var validLastName: Bool = false
     var validUsername: Bool = false
     var validPassword: Bool = false
+    var invalidUsernames: [String] = []
+    
+    
+    var activityIndicator = UIActivityIndicatorView()
+    var strLabel = UILabel()
+    let loadingAnimationView = UIView()
+    
+    func activityIndicator(title: String) {
+        strLabel.removeFromSuperview()
+        activityIndicator.removeFromSuperview()
+        loadingAnimationView.removeFromSuperview()
+        
+        strLabel = UILabel(frame: CGRect(x: 50, y: 0, width: 200, height: 46))
+        strLabel.text = title
+        strLabel.font = .systemFont(ofSize: 14, weight: UIFont.Weight.medium)
+        strLabel.textColor = UIColor(white: 0.9, alpha: 0.7)
+        
+        loadingAnimationView.frame = CGRect(x: view.frame.midX - strLabel.frame.width/2, y: view.frame.midY - strLabel.frame.height/2 , width: 200, height: 46)
+        loadingAnimationView.layer.cornerRadius = 15
+        loadingAnimationView.backgroundColor = UIColor(red:0.27, green:0.27, blue:0.27, alpha:0.7)
+        
+        activityIndicator = UIActivityIndicatorView(style: .white)
+        activityIndicator.frame = CGRect(x: 0, y: 0, width: 46, height: 46)
+        activityIndicator.startAnimating()
+        
+        loadingAnimationView.addSubview(activityIndicator)
+        loadingAnimationView.addSubview(strLabel)
+        self.view.addSubview(loadingAnimationView)
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -46,17 +77,147 @@ class NewUserViewController: UIViewController {
         username.isEnabled = false
         password.isEnabled = false
         confirmPassword.isEnabled = false
-        performSegue(withIdentifier: "saveNewUserSegue", sender: self)
+        
+        
         // then go to activity monitor
         
         // then send data to database
         // then return to login page, preferably with new user hidden
+        self.doCreateNewUser()
     }
     
+    
+    func doCreateNewUser() { // gets called when login is touched up inside
+        let fname = firstName.text
+        let lname = lastName.text
+        let usr = username.text
+        let psw = password.text
+        
+        let url = URL(string: "https://fullstack-project-2.herokuapp.com/newUser/")
+        let session = URLSession.shared
+        
+        let request = NSMutableURLRequest(url: url!)
+        request.httpMethod = "POST"
+        let param1 = "firstname=" + fname! + "&lastname=" + lname!
+        let param2 = "&username=" + usr! + "&password=" + psw!
+        let paramToSend = param1 + param2 // compiler requires this for some reason
+        
+        request.httpBody = paramToSend.data(using: String.Encoding.utf8)
+        
+        let task = session.dataTask(with: request as URLRequest) { // completionHandler code is implied
+            (data, response, error) in
+            
+            // check for any errors
+            guard error == nil else {
+                print("error retrieving data from server, error:")
+                print(error as Any)
+                self.newUserToDo()
+                return
+            }
+            // make sure we got data
+            guard let responseData = data else {
+                print("Error: did not receive data")
+                self.newUserToDo()
+                return
+            }
+            
+//            guard let httpResponse = response as? HTTPURLResponse else {
+//                print("unexpected response")
+//                self.newUserToDo()
+//                return
+//            }
+            
+            // let code = httpResponse.statusCode // we may want to do something with this at some point
+            
+            let json: Any?
+            do {
+                json = try JSONSerialization.jsonObject(with: responseData, options: [])
+            }
+            catch {
+                print("error trying to convert data to JSON")
+                print(String(data: responseData, encoding: String.Encoding.utf8) ?? "[data not convertible to string]")
+                self.newUserToDo()
+                return
+            }
+            
+            guard let server_response = json as? NSDictionary else {
+                print("error trying to convert data to NSDictionary")
+                self.newUserToDo()
+                return
+            }
+ 
+            
+            guard let status = server_response["status"] as? String else {
+                print("incorrect server_response format: no status field")
+                self.newUserToDo()
+                return
+            }
+            guard let message = server_response["message"] as? String else {
+                print("incorrect server_response format: no message field")
+                self.newUserToDo()
+                return
+            }
+            
+            if status == "false" { // then there was an error: code 406
+                self.errorLabel.text = message
+                self.errorLabel.textColor = UIColor.red
+                self.newUserToDo()
+                return
+            }
+            
+            // otherwise all good
+            
+            
+            DispatchQueue.main.async (
+                execute: self.newUserDone
+            )
+        }
+        
+        task.resume()
+    }
+    
+    
+    
+    func newUserToDo() {
+        DispatchQueue.main.async {
+            self.firstName.isEnabled = true
+            self.lastName.isEnabled = true
+            self.username.isEnabled = true
+            self.password.isEnabled = true
+            self.confirmPassword.isEnabled = true
+            if self.errorLabel.text!.contains("username") { // crude way of determining if error involves username
+                self.changeBorderColor(field: self.username, color: UIColor.red)
+                self.invalidUsernames.append(self.username.text!)
+            }
+        }
+       
+        AudioServicesPlayAlertSound(SystemSoundID(kSystemSoundID_Vibrate)) // vibrates phone
+    }
+    
+    func newUserDone() {
+        DispatchQueue.main.async {
+            self.firstName.isEnabled = false
+            self.lastName.isEnabled = false
+            self.username.isEnabled = false
+            self.password.isEnabled = false
+            self.confirmPassword.isEnabled = false
+        }
+
+        self.activityIndicator(title: "Securely creating user...")
+
+        // Add a delay from: https://stackoverflow.com/questions/38031137/how-to-program-a-delay-in-swift-3
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
+            self.performSegue(withIdentifier: "saveNewUserSegue", sender: self)
+        }
+    }
+    
+    
     func changeBorderColor(field: UITextField, color: UIColor) {
-        field.layer.borderColor = color.cgColor
-        field.layer.borderWidth = 1.0
-        field.layer.cornerRadius = 5.0
+        DispatchQueue.main.async {
+            field.layer.borderColor = color.cgColor
+            field.layer.borderWidth = 1.0
+            field.layer.cornerRadius = 5.0
+        }
     }
     
     @objc func checkForValidFirstName() {
@@ -89,7 +250,7 @@ class NewUserViewController: UIViewController {
  
     
     @objc func checkForValidUsername() {
-        if (isAlphanumeric(str: username.text!)) {
+        if (isAlphanumeric(str: username.text!) && !invalidUsernames.contains(username.text!)) {
             self.validUsername = true
             changeBorderColor(field: username, color: UIColor.green)
         }

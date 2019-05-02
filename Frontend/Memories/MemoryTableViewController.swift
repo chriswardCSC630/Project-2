@@ -22,11 +22,8 @@ class MemoryTableViewController: UITableViewController {
         // Use the edit button item provided by the table view controller.
         navigationItem.leftBarButtonItem = editButtonItem
         
-        let savedMemories = loadMemories()
+        loadMemories() // to populate the memories array
         
-        if savedMemories?.count ?? 0 > 0 {
-            memories = savedMemories ?? [Memory]()
-        }
     }
 
     // MARK: - Table view data source
@@ -71,8 +68,8 @@ class MemoryTableViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             // Delete the row from the data source
-            memories.remove(at: indexPath.row)
-            saveMemories()
+            let memory = memories.remove(at: indexPath.row)
+            deleteMemory(memory: memory)
             tableView.deleteRows(at: [indexPath], with: .fade)
         } else if editingStyle == .insert {
             // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
@@ -147,13 +144,13 @@ class MemoryTableViewController: UITableViewController {
     
     func handleLogout() {
         let preferences = UserDefaults.standard
-        preferences.removeObject(forKey: "session")
+        preferences.removeObject(forKey: "username")
         self.performSegue(withIdentifier: "logoutSegue", sender: self.logoutButton)
         
     }
     
     @IBAction func unwindToMemoryList(sender: UIStoryboardSegue){
-        if let sourceViewController = sender.source as? MemoryViewController, var memory = sourceViewController.memory {
+        if let sourceViewController = sender.source as? MemoryViewController, let memory = sourceViewController.memory {
             
             let title = memory.title!
             let photo = memory.photo!
@@ -161,116 +158,36 @@ class MemoryTableViewController: UITableViewController {
             let date = memory.date!
             let id = memory.id!
             
-            let url = URL(string: "http://www.kaleidosblog.com/tutorial/login/api/login")
-            let session = URLSession.shared
-            
             // Encode photo for POST
             let photoData: NSData = photo.pngData()! as NSData
             let photoStringData = photoData.base64EncodedString(options: Data.Base64EncodingOptions.lineLength64Characters)
-            
-            // TO DECODE PHOTO:
-            let dataDecoded:NSData = NSData(base64Encoded: photoStringData, options: NSData.Base64DecodingOptions(rawValue: 0))!
-            let decodedPhoto:UIImage = UIImage(data: dataDecoded as Data)!
-            
-            let request = NSMutableURLRequest(url: url!)
-            
+        
             if let selectedIndexPath = tableView.indexPathForSelectedRow {
                 // PATCH the memory to the database
-                request.httpMethod = "PATCH"
                 
                 // paramToSend broken up to allow compiler to check code: error "The compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions" was previously recieved
                 let param1 = "title=" + title + "&photo=" + photoStringData
                 let param2 = "&text=" + text + "&date=" + date + "&id=" + id
                 let paramToSend = param1 + param2
-                
-                request.httpBody = paramToSend.data(using: String.Encoding.utf8)
-                
-                let task = session.dataTask(with: request as URLRequest) { // completionHandler code is implied
-                    (data, response, error) in
-                    
-                    // check for any errors
-                    guard error == nil else {
-                        print("error retrieving data from server, error:")
-                        print(error as Any)
-                        return
-                    }
-                    // make sure we got data
-                    guard let responseData = data else {
-                        print("Error: did not receive data")
-                        return
-                    }
-                    
-                    let json: Any?
-                    do {
-                        json = try JSONSerialization.jsonObject(with: responseData, options: [])
-                    }
-                    catch {
-                        print("error trying to convert data to JSON")
-                        print(String(data: responseData, encoding: String.Encoding.utf8) ?? "[data not convertible to string]")
-                        return
-                    }
-                    
-                    guard let serverResponse = json as? NSDictionary else {
-                        print("error trying to convert data to NSDictionary")
-                        return
-                    }
-                }
-                task.resume()
-                
+                makeURLRequest(urlString: "https://fullstack-project-2.herokuapp.com/memories/", method: "PATCH", paramToSend: paramToSend, memory: memory)
                 // Update an existing memory.
-                memories[selectedIndexPath.row] = memory
+                memories[selectedIndexPath.row] = memory // test this later, we may need to actually save the new memory if it's not just a reference
                 tableView.reloadRows(at: [selectedIndexPath], with: .none)
                 
             } else {
                 // POST the memory to the database
-                request.httpMethod = "POST"
                 
                 // paramToSend broken up to allow compiler to check code: error "The compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions" was previously recieved
                 let param1 = "title=" + title + "&photo=" + photoStringData
                 let param2 = "&text=" + text + "&date=" + date
                 let paramToSend = param1 + param2
                 
-                request.httpBody = paramToSend.data(using: String.Encoding.utf8)
-                
-                let task = session.dataTask(with: request as URLRequest) { // completionHandler code is implied
-                    (data, response, error) in
-                    
-                    // check for any errors
-                    guard error == nil else {
-                        print("error retrieving data from server, error:")
-                        print(error as Any)
-                        return
-                    }
-                    // make sure we got data
-                    guard let responseData = data else {
-                        print("Error: did not receive data")
-                        return
-                    }
-                    
-                    let json: Any?
-                    do {
-                        json = try JSONSerialization.jsonObject(with: responseData, options: [])
-                    }
-                    catch {
-                        print("error trying to convert data to JSON")
-                        print(String(data: responseData, encoding: String.Encoding.utf8) ?? "[data not convertible to string]")
-                        return
-                    }
-                    
-                    guard let serverResponse = json as? NSDictionary else {
-                        print("error trying to convert data to NSDictionary")
-                        return
-                    }
-                    
-                    memory = self.updateMemoryID(serverResponse: serverResponse, memory: memory)
-                }
-                task.resume()
+                makeURLRequest(urlString: "https://fullstack-project-2.herokuapp.com/memories/", method: "POST", paramToSend: paramToSend, memory: memory)
                 
                 // Add a new memory.
                 let newIndexPath = IndexPath(row: memories.count, section: 0)
                 memories.append(memory)
                 tableView.insertRows(at: [newIndexPath], with: .automatic)
-                saveMemories()
             }
         }
     }
@@ -289,35 +206,135 @@ class MemoryTableViewController: UITableViewController {
 //        }
     }
     
-    private func updateMemoryID(serverResponse: NSDictionary, memory: Memory) -> Memory {
+    private func updateMemoryID(serverResponse: NSDictionary, memory: Memory){
         guard let id = serverResponse["id"] as? String else {
             print("No id")
-            return memory
+            return
         }
         memory.id = id
-        return memory
     }
     
-    func getDocumentsDirectory() -> URL {
-        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        return paths[0]
+    
+    private func loadMemories() {
+    
+        // GET the memories from the database
+        makeURLRequest(urlString: "https://fullstack-project-2.herokuapp.com/memories/", method: "GET")
+            
     }
     
-    private func loadMemories() -> [Memory]? {
-        let fullPath = getDocumentsDirectory().appendingPathComponent("memories")
-        if let nsData = NSData(contentsOf: fullPath) {
+    func populateMemories(data:NSDictionary) {
+        
+        for id in data.allKeys {
+            guard let currentMemory = data[id] as? NSDictionary else {
+                print("invalid response format: content")
+                return
+            }
+            // the data will be arranged by keys
+            
+            guard let title = currentMemory["title"] as? String else {
+                print("invalid response format: title")
+                return
+            }
+            
+            guard let photoString = currentMemory["image"] as? String else {
+                print("invalid response format: photoString")
+                return
+            }
+            guard let text = currentMemory["text"] as? String else {
+                print("invalid response format: text")
+                return
+            }
+            
+            guard let id = id as? String else {
+                print("invalid response format: id")
+                return
+            }
+            
+            // TO DECODE PHOTO:
+            let dataDecoded:NSData = NSData(base64Encoded: photoString, options: NSData.Base64DecodingOptions(rawValue: 0))!
+            let decodedPhoto:UIImage = UIImage(data: dataDecoded as Data)!
+            
+            let memory = Memory(title: title, photo: decodedPhoto, text: text)
+            memory!.id = id
+            memories.append(memory!)
+        }
+        
+        tableView.reloadData()
+        
+    }
+    
+    func deleteMemory(memory: Memory) {
+  
+        let paramToSend = "id=" + memory.id!
+        
+        // DELETE the memory from the database
+        makeURLRequest(urlString: "https://fullstack-project-2.herokuapp.com/memories/", method: "DELETE", paramToSend: paramToSend, memory: memory)
+    
+    }
+    
+    func makeURLRequest(urlString: String, method: String, paramToSend: String? = "", memory: Memory? = nil) {
+        let url = URL(string: urlString)
+        let session = URLSession.shared
+        
+        
+        let request = NSMutableURLRequest(url: url!)
+        
+        // PATCH the memory to the database
+        request.httpMethod = method
+        
+        if (method == "POST" || method == "PATCH" || method == "DELETE") {
+            let params: String = paramToSend ?? ""
+            request.httpBody = params.data(using: String.Encoding.utf8)
+        }
+        
+        
+        let task = session.dataTask(with: request as URLRequest) { // completionHandler code is implied
+            (data, response, error) in
+            
+            // check for any errors
+            guard error == nil else {
+                print("error retrieving data from server, error:")
+                print(error as Any)
+                return
+            }
+            // make sure we got data
+            guard let responseData = data else {
+                print("Error: did not receive data")
+                return
+            }
+            
+            let json: Any?
             do {
-                
-                let data = Data(referencing:nsData)
-                
-                if let loadedMemories = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) as? Array<Memory> {
-                    return loadedMemories
+                json = try JSONSerialization.jsonObject(with: responseData, options: [])
+            }
+            catch {
+                print("error trying to convert data to JSON")
+                print(String(data: responseData, encoding: String.Encoding.utf8) ?? "[data not convertible to string]")
+                return
+            }
+            
+            guard let serverResponse = json as? NSDictionary else {
+                print("error trying to convert data to NSDictionary")
+                return
+            }
+            
+            if (method == "GET") {
+                self.populateMemories(data: serverResponse)
+            }
+            else if (method == "POST") {
+                if memory == nil {
+                    print("Memory passed in incompatible format -- POST")
+                    return
                 }
-            } catch {
-                print("Couldn't read file.")
-                return nil
+                self.updateMemoryID(serverResponse: serverResponse, memory: memory!)
+            }
+            else if (method == "PATCH") {
+                return
+            }
+            else if (method == "DELETE") {
+                return
             }
         }
-        return nil
+        task.resume()
     }
 }

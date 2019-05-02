@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import AudioToolbox
 
 class LoginViewController: UIViewController, UITextFieldDelegate {
 
@@ -14,6 +15,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var _password: UITextField!
     @IBOutlet weak var _login_button: UIButton!
     @IBOutlet weak var _newUserButton: UIButton!
+    @IBOutlet weak var errorLabel: UILabel!
     
     var activityIndicator = UIActivityIndicatorView()
     var strLabel = UILabel()
@@ -47,12 +49,10 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
 
         let preferences = UserDefaults.standard
         
-        if (preferences.object(forKey: "session") != nil) {
+        if (preferences.object(forKey: "username") != nil) {
             LoginDone()
         }
-        else {
-            LoginToDo()
-        }
+
         
         _password.addTarget(self, action: #selector(updateLoginButtonState), for: .editingChanged)
 
@@ -64,16 +64,38 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     @IBAction func LoginButton(_ sender: Any) {
         let username = _username.text
         let password = _password.text
-        if (username == "" || password == "") {
-            print("invalid username and/or password")
+        if (username == "") {
+            changeBorderColor(field: _username, color: UIColor.red)
             return
         }
+        else {
+            changeBorderColor(field: _username, color: UIColor.clear)
+        }
+        
+        if (password == "") {
+            changeBorderColor(field: _username, color: UIColor.red)
+            return
+        }
+        else {
+            changeBorderColor(field: _username, color: UIColor.clear)
+        }
+        
+        
         doLogin(username!, password!)
     }
     
+    func changeBorderColor(field: UITextField, color: UIColor) {
+        DispatchQueue.main.async {
+            field.layer.borderColor = color.cgColor
+            field.layer.borderWidth = 1.0
+            field.layer.cornerRadius = 5.0
+        }
+    }
+    
+    
     func doLogin(_ user: String, _ psw: String) { // gets called when login is touched up inside
-//        _username.isEnabled = false // disables both buttons
-//        _password.isEnabled = false
+        _username.isEnabled = false // disables both buttons
+        _password.isEnabled = false
         
         let url = URL(string: "https://fullstack-project-2.herokuapp.com/login/")
         let session = URLSession.shared
@@ -90,20 +112,23 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             guard error == nil else {
                 print("error retrieving data from server, error:")
                 print(error as Any)
+                self.LoginToDo()
                 return
             }
             // make sure we got data
             guard let responseData = data else {
                 print("Error: did not receive data")
+                self.LoginToDo()
                 return
             }
             
-            guard let httpResponse = response as? HTTPURLResponse else {
-                print("unexpected response")
-                return
-            }
+//            guard let httpResponse = response as? HTTPURLResponse else {
+//                print("unexpected response")
+//                self.LoginToDo()
+//                return
+//            }
             
-            print(httpResponse.statusCode)
+            // let code = httpResponse.statusCode // we may want to do something with this at some point
             
             let json: Any?
             do {
@@ -112,60 +137,69 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             catch {
                 print("error trying to convert data to JSON")
                 print(String(data: responseData, encoding: String.Encoding.utf8) ?? "[data not convertible to string]")
+                self.LoginToDo()
                 return
             }
             
             guard let server_response = json as? NSDictionary else {
                 print("error trying to convert data to NSDictionary")
+                self.LoginToDo()
                 return
             }
-            print(server_response)
-            print(server_response.allKeys)
+
             
-//            let preferences = UserDefaults.standard
-//            preferences.set(session_data, forKey: "session") // updates userDefaults to this session
+            guard let status = server_response["status"] as? String else {
+                print("incorrect server_response format: no status field")
+                self.LoginToDo()
+                return
+            }
+            guard let message = server_response["message"] as? String else {
+                print("incorrect server_response format: no message field")
+                self.LoginToDo()
+                return
+            }
+            
+            if status == "false" { // then there was an error: code 406
+                DispatchQueue.main.async {
+                    self.errorLabel.text = message
+                    self.errorLabel.textColor = UIColor.red
+                }
+                self.LoginToDo()
+                return
+            }
+            
+            // otherwise all good
+            
+            
+            let preferences = UserDefaults.standard
+            preferences.set(user, forKey: "username") // updates userDefaults to this username
             DispatchQueue.main.async (
                 execute: self.LoginDone
             )
         }
         
         task.resume()
-        self.LoginDone()
     }
     
-//    func invalidRequest(data: Data?, response: URLResponse?, error: Error?, m: String) {
-//        LoginToDo()
-//        print(m)
-//        if data == nil {
-//            print("no data")
-//        }
-//        else {
-//            print(data)
-//        }
-//        if response == nil {
-//            print("no response")
-//        }
-//        else {
-//            print(response)
-//        }
-//        if error == nil {
-//            print("no error")
-//        }
-//        else {
-//            print(error)
-//        }
-//
-//    }
     
     func LoginToDo() {
-        _username.isEnabled = true
-        _password.isEnabled = true
+        DispatchQueue.main.async {
+            self._username.isEnabled = true
+            self._password.isEnabled = true
+        }
+        changeBorderColor(field: _username, color: UIColor.red)
+        changeBorderColor(field: _password, color: UIColor.red)
+        AudioServicesPlayAlertSound(SystemSoundID(kSystemSoundID_Vibrate)) // vibrates phone
     }
     
     func LoginDone() {
-        _username.isEnabled = false
-        _password.isEnabled = false
-        _login_button.isEnabled = false
+        DispatchQueue.main.async {
+            self._username.isEnabled = false
+            self._password.isEnabled = false
+            self._login_button.isEnabled = false
+        }
+        changeBorderColor(field: _username, color: UIColor.green)
+        changeBorderColor(field: _password, color: UIColor.green)
         
         self.activityIndicator(title: "Securely logging in...")
         
