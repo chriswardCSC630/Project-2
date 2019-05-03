@@ -28,7 +28,7 @@ class Memory(models.Model):
     hash_id = models.CharField(max_length=32,default=helper.create_hash,unique=True)
     title = models.CharField(max_length=255, default="none")
     text = models.TextField(default="none")
-    image = models.FileField(upload_to='images/', null=True, verbose_name="") #models.TextField(default="none") # models.ImageField(upload_to='images/') --> alternatively: https://wsvincent.com/django-image-uploads/
+    photo = models.FileField(upload_to='images/', null=True, verbose_name="") #models.TextField(default="none") # models.ImageField(upload_to='images/') --> alternatively: https://wsvincent.com/django-image-uploads/
     date = models.CharField(max_length=255, default="none")
 
     def __str__(self):

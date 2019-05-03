@@ -70,7 +70,7 @@ class requestHandlers(View):
 
             # Propogate memories to return to frontend
             for memory in Memory.objects.filter(username = session_name):
-                data[memory.id] = {"title": memory.title, "text": memory.text, "image": memory.image, "date": memory.date}
+                data[memory.id] = {"title": memory.title, "text": memory.text, "photo": memory.photo, "date": memory.date}
 
             # Return data to frontend
             return JsonResponse(data, status=200)
@@ -82,7 +82,7 @@ class requestHandlers(View):
             date = content["date"]
 
             # Create a memory and save its reference to access id
-            memory = Memory.object.create(title = title, image = photo, text = text, date = date)
+            memory = Memory.object.create(title = title, photo = photo, text = text, date = date)
             memory.save()
             # Return id as part of JsonResponse so frontend can set id
             return JsonResponse({'status':'false', "message": "memory POSTed", "id": memory.id}, status=201) #201 -> new resource created
