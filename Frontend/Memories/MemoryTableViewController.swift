@@ -177,7 +177,7 @@ class MemoryTableViewController: UITableViewController {
             
             // Encode photo for POST
 //            let photoData: NSData = photo.pngData(compressionQuality: 0.1)! as NSData
-            var photoStringData = photoData.base64EncodedString(options: Data.Base64EncodingOptions.lineLength64Characters)
+            let photoStringData = photoData.base64EncodedString(options: Data.Base64EncodingOptions.lineLength64Characters)
             
             // for testing whether we can encode and decode a photo properly
 //            photoStringData = "" + photoStringData
