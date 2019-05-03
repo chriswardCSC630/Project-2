@@ -69,11 +69,13 @@ class requestHandlers(View):
 
         if request.method == "GET":
             data = {}
-
+            for memory in Memory.objects.all():
+                print(memory.hash_id)
             # Propogate memories to return to frontend
             for memory in Memory.objects.filter(hash_id = hash_id):
-                data[memory.id] = {"title": memory.title, "text": memory.text, "image": memory.image.read(), "date": memory.date}
+                data[memory.id] = {"title": memory.title, "text": memory.text, "image": memory.image, "date": memory.date}
 
+            print(data)
             # Return data to frontend
             return JsonResponse(data, status=200)
 
@@ -84,8 +86,9 @@ class requestHandlers(View):
             date = content["date"]
 
             # Create a memory and save its reference to access id
-            memory = Memory.object.create(title = title, image = photo, text = text, date = date)
+            memory = Memory(hash_id = hash_id, title = title, image = photo, text = text, date = date)
             memory.save()
+            print(memory.id)
             # Return id as part of JsonResponse so frontend can set id
             return JsonResponse({'status':'false', "message": "memory POSTed", "id": memory.id}, status=201) #201 -> new resource created
 

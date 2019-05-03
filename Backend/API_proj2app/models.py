@@ -23,10 +23,10 @@ class User(AbstractUser):
         return self.username + " (name: " + self.firstname + " " + self.lastname + ")"
 
 class Memory(models.Model):
-    hash_id = models.CharField(max_length=32,default=helper.create_hash,unique=True)
+    hash_id = models.CharField(max_length=32)
     title = models.CharField(max_length=255, default="none")
     text = models.TextField(default="none")
-    image = models.FileField(upload_to='images/', null=True, verbose_name="") #models.TextField(default="none") # models.ImageField(upload_to='images/') --> alternatively: https://wsvincent.com/django-image-uploads/
+    image = models.BinaryField(default=0)#models.TextField(default="none") # models.ImageField(upload_to='images/') --> alternatively: https://wsvincent.com/django-image-uploads/
     date = models.CharField(max_length=255, default="none")
 
     def __str__(self):

@@ -14,6 +14,7 @@ class MemoryTableViewController: UITableViewController {
     var memories =  [Memory]()
     //    let BASE_API = "https://fullstack-project-2.herokuapp.com/"
     let BASE_API = "http://localhost:8000/"
+    var hasLoaded = false
     
     
     @IBOutlet weak var logoutButton: UIButton!
@@ -25,7 +26,9 @@ class MemoryTableViewController: UITableViewController {
         // Use the edit button item provided by the table view controller.
         navigationItem.leftBarButtonItem = editButtonItem
         
-        loadMemories() // to populate the memories array
+        if !self.hasLoaded {
+            loadMemories() // to populate the memories array, but we only need to do it once
+        }
         
     }
 
@@ -156,19 +159,31 @@ class MemoryTableViewController: UITableViewController {
         if let sourceViewController = sender.source as? MemoryViewController, let memory = sourceViewController.memory {
             
             let title = memory.title!
-            let largePhoto = memory.photo!
-            print(largePhoto.size)
-            let compressData = largePhoto.jpegData(compressionQuality: 0.1) //max value is 1.0 and minimum is 0.0
-            let photo = UIImage(data: compressData!)!
-            print(photo.size)
+            let photo = memory.photo!
+            let photoData = photo.jpegData(compressionQuality: 0.1)! //max value is 1.0 and minimum is 0.0
+            
+
+            
+            // for debugging: checking size of compressData
+//            let bcf = ByteCountFormatter()
+//            bcf.allowedUnits = [.useMB] // optional: restricts the units to MB only
+//            bcf.countStyle = .file
+//            print(bcf.string(fromByteCount: Int64(compressData!.count)))
+            
+//            let photo = UIImage(data: compressData!)!
             let text = memory.text!
             let date = memory.date!
             let id = memory.id!
             
             // Encode photo for POST
-            let photoData: NSData = photo.pngData()! as NSData
-            let photoStringData = photoData.base64EncodedString(options: Data.Base64EncodingOptions.lineLength64Characters)
-        
+//            let photoData: NSData = photo.pngData(compressionQuality: 0.1)! as NSData
+            var photoStringData = photoData.base64EncodedString(options: Data.Base64EncodingOptions.lineLength64Characters)
+            
+            // for testing whether we can encode and decode a photo properly
+//            photoStringData = "" + photoStringData
+//            let dataDecoded:Data = Data(base64Encoded: photoStringData)!
+//            let decodedPhoto:UIImage = UIImage(data: dataDecoded)!
+            
             if let selectedIndexPath = tableView.indexPathForSelectedRow {
                 MyActivityIndicator.activityIndicator(title: "Updating memory...", view: self.view)
 
@@ -208,11 +223,12 @@ class MemoryTableViewController: UITableViewController {
 
     
     private func updateMemoryID(serverResponse: NSDictionary, memory: Memory){
-        guard let id = serverResponse["id"] as? String else {
+
+        guard let id = serverResponse["id"] as? Int else {
             print("No id")
             return
         }
-        memory.id = id
+        memory.id = String(id)
         DispatchQueue.main.async {
             MyActivityIndicator.removeAll()
         }
@@ -255,13 +271,16 @@ class MemoryTableViewController: UITableViewController {
             }
             
             // TO DECODE PHOTO:
-            let dataDecoded:NSData = NSData(base64Encoded: photoString, options: NSData.Base64DecodingOptions(rawValue: 0))!
-            let decodedPhoto:UIImage = UIImage(data: dataDecoded as Data)!
+            let dataDecoded:Data = Data(base64Encoded: photoString)!
+
+            let decodedPhoto:UIImage = UIImage(data: dataDecoded)!
             
             let memory = Memory(title: title, photo: decodedPhoto, text: text)
             memory!.id = id
             memories.append(memory!)
         }
+        
+        self.hasLoaded = true // so that it doesn't load every time this view loads: only once
         
         DispatchQueue.main.async {
             self.tableView.reloadData()

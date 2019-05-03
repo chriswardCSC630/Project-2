@@ -91,7 +91,7 @@ DATABASES = { # from https://www.digitalocean.com/community/tutorials/how-to-use
 #used to connect heroku database
 #from https://devcenter.heroku.com/articles/heroku-postgresql#set-up-postgres-on-mac
 import dj_database_url
-DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
+# DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
 
 
 # Password validation
@@ -133,10 +133,11 @@ USE_TZ = True
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/staticfiles/'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'staticfiles'),

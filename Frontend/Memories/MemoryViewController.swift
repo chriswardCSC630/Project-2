@@ -16,16 +16,12 @@ class MemoryViewController: UIViewController, UITextFieldDelegate, UIImagePicker
     @IBOutlet weak var photoImageView: UIImageView!
     @IBOutlet weak var textTextField: UITextView!
     @IBOutlet weak var saveButton: UIBarButtonItem!
-    @IBOutlet weak var scrollView: UIScrollView!
     
     var memory: Memory?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // from https://stackoverflow.com/questions/36028493/add-a-scrollview-to-existing-view
-        // more help from https://stackoverflow.com/questions/27680701/how-to-create-a-cgsize-in-swift
-//        scrollView.contentSize = CGSize(self.view.frame.width, self.view.frame.height+CGFloat(100)
 
         
         // Handle the text field's user input through delegate callbacks.
@@ -43,39 +39,11 @@ class MemoryViewController: UIViewController, UITextFieldDelegate, UIImagePicker
         // Enable the Save button only if the text field has a valid Memory title.
         updateSaveButtonState()
         
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(self.keyboardWillShow(_:)),
-            name: UIResponder.keyboardWillShowNotification,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(self.keyboardWillHide(_:)),
-            name: UIResponder.keyboardWillHideNotification,
-            object: nil
-        )
+
     }
-    // from https://www.raywenderlich.com/560-uiscrollview-tutorial-getting-started
     
     deinit {
         NotificationCenter.default.removeObserver(self)
-    }
-    
-    func adjustInsetForKeyboardShow(_ show: Bool, notification: Notification) {
-        let userInfo = notification.userInfo ?? [:]
-        let keyboardFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as! NSValue).cgRectValue
-        let adjustmentHeight = (keyboardFrame.height + 20) * (show ? 1 : -1)
-        scrollView.contentInset.bottom += adjustmentHeight
-        scrollView.scrollIndicatorInsets.bottom += adjustmentHeight
-    }
-    
-    @objc func keyboardWillShow(_ notification: Notification) {
-        adjustInsetForKeyboardShow(true, notification: notification)
-    }
-    
-    @objc func keyboardWillHide(_ notification: Notification) {
-        adjustInsetForKeyboardShow(false, notification: notification)
     }
     
     @IBAction func hideKeyboard(_ sender: AnyObject) {
