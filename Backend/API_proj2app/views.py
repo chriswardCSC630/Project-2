@@ -1,16 +1,12 @@
 # standard imports
-import django.contrib.auth
+
 from django.shortcuts import render
 from django.views import View
 from django.http import HttpResponse, JsonResponse, QueryDict
 from django.urls import include, path
 from rest_framework import routers
 from API_proj2app.models import *
-from django.contrib.auth import login, logout
-from django.contrib.auth import authenticate
-from . import serializers # serializers.py, which we created
 #from django.contrib.auth.models import User
-from django.contrib.auth.decorators import login_required
 # Create your views here.
 
 class requestHandlers(View):
@@ -19,21 +15,26 @@ class requestHandlers(View):
         return HttpResponse("Welcome")
 
     # handle all requests at .../login/
-    def auth_login(request):
+    def login(request):
         # Only POSTing to .../login/
     # from https://stackoverflow.com/questions/29780060/trying-to-parse-request-body-from-post-in-django
 
         if request.method == "POST":
             content = QueryDict(request.body.decode('utf-8')).dict() # content should be dict now
-            user = django.contrib.auth.authenticate(username=content["username"], password=content["password"])
-            if user:
-                login(request,user) #django's built in
-                # serializer = serializers.UserSerializer(user)
-                # print(serializer)
-                return JsonResponse({'status':'true','message':"Logged in", "hash_id":user.hash_id}, status=200)
+            username = content["username"]
+            try:
+                user = User.objects.get(username = username)
+            except:
+                return JsonResponse({'status':'false','message':"Invalid username"}, status=406)
+            password = encrypt(content["password"])
+            if (password != user.password):
+                return JsonResponse({'status':'false','message':"Invalid password"}, status=406)
 
-            return JsonResponse({'status':'false','message':"Invalid username and/or password"}, status=406)
+            request.session["session_name"] = User.objects.get(username)#set this to the username #learned sessions from session documentation: https://docs.djangoproject.com/en/2.2/topics/http/sessions/
+            return JsonResponse({'status':'true','message':"Logged in"}, status=200)
 
+    def encrypt(password):
+        return password
 
     # handle all requests at .../newUser/
     def newUser(request):
@@ -45,25 +46,22 @@ class requestHandlers(View):
         password = content["password"]
 
         if request.method == "POST":
-            if User.objects.filter(username = username).exists():
+            if len(User.objects.filter(username = username)) > 0:
                 return JsonResponse({'status':'false','message':"This username is already in use"}, status=406)
+
             try:
-                new_user = User(firstname = firstname, lastname = lastname, username = username)
-                new_user.set_password(password)
+                new_user = User.objects.create(firstname = firstname, lastname = lastname, username = username, password = password)
             except:
                 return JsonResponse({'status':'false', 'message':"Invalid username or password"}, status=406)
-            # serializer = serializers.UserSerializer(new_user)
+
             new_user.save()
-            return JsonResponse({'status':'true', 'message':"Your account has been created, please login", "hash_id": new_user.hash_id}, status=201) #201 -> new resource created
+            return JsonResponse({'status':'true', 'message':"Your account has been created, please login"}, status=201) #201 -> new resource created
+
 
     # handle all requests at .../memories/
-    @login_required # so that someone cannot access this method without having logged in
     def handleMemories(request):
-        # session_name = request.session["session_name"]
-        # print(request.META)
-        # print(dir(request))
-        print(request.user.hash_id)
-        hash_id = request.user.hash_id
+        session_name = request.session["session_name"]
+
         # Decode request body content
         content = QueryDict(request.body.decode('utf-8')).dict()
 
@@ -71,8 +69,8 @@ class requestHandlers(View):
             data = {}
 
             # Propogate memories to return to frontend
-            for memory in Memory.objects.filter(hash_id = hash_id):
-                data[memory.id] = {"title": memory.title, "text": memory.text, "image": memory.image.read(), "date": memory.date}
+            for memory in Memory.objects.filter(username = session_name):
+                data[memory.id] = {"title": memory.title, "text": memory.text, "image": memory.image, "date": memory.date}
 
             # Return data to frontend
             return JsonResponse(data, status=200)
@@ -116,6 +114,3 @@ class requestHandlers(View):
             Memory.objects.get(id=id).delete()
 
             return JsonResponse({"status": "true", "message": "memory DELETEd"}, status=200)
-
-    def auth_logout(request):
-        logout(request)
