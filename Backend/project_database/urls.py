@@ -15,20 +15,22 @@ Including another URLconf
 """
 from django.contrib import admin
 from API_proj2app.views import *
-from django.conf import settings # for imagefield
+from django.conf import settings # for media
 from django.urls import path, include # for imagefield
-from django.conf.urls.static import static # for imagefield
+from django.conf.urls.static import static
 
 
 # Fairly standard url requests
 
 urlpatterns = [
     path('', requestHandlers.index),
-    path('login/', requestHandlers.login),
+    path('admin/', admin.site.urls),
+    path('login/', requestHandlers.auth_login),
     path('newUser/', requestHandlers.newUser),
-    path('memories/', requestHandlers.handleMemories)
-]
+    path('memories/', requestHandlers.handleMemories),
+    path('logout/', requestHandlers.auth_logout),
+] + static(settings.MEDIA_URL, document_root= settings.MEDIA_ROOT) # for media
 
 # for imagefield (redirect): https://wsvincent.com/django-image-uploads/
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# if settings.DEBUG:
+#     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

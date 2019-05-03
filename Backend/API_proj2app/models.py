@@ -1,28 +1,35 @@
 from django.db import models
 from django.conf import settings
 from decimal import Decimal
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 import urllib
 import json
 from django.core.files import File
+from . import helper # we created this
+
 # helpful link: https://www.digitalocean.com/community/tutorials/how-to-create-django-models
 # The User model. The user_id is automatically generated
-class User(models.Model):
-    firstname = models.CharField(max_length=30)
-    lastname = models.CharField(max_length=30)
-    username = models.CharField(max_length=30)
-    password = models.CharField(max_length=30)
+class User(AbstractUser):
+
+    hash_id = models.CharField(max_length=32, default=helper.create_hash, unique=True)
+
+    firstname = models.CharField(max_length=30, default="none")
+    lastname = models.CharField(max_length=30, default="none")
+
+    # username and password already in AbstractUser
+    #username = models.CharField(max_length=30, default="none", unique=True)
+    #password = models.CharField(max_length=30, default="none")
     # for displaying a user objects
     def __str__(self):
         return self.username + " (name: " + self.firstname + " " + self.lastname + ")"
 
 
 class Memory(models.Model):
-    username = models.CharField(max_length=30)
-    title = models.CharField(max_length=255)
-    text = models.TextField()
-    image = models.ImageField(upload_to='images/') #how to use imagefield: https://wsvincent.com/django-image-uploads/
-    date = models.CharField(max_length=255)
+    hash_id = models.CharField(max_length=32,default=helper.create_hash,unique=True)
+    title = models.CharField(max_length=255, default="none")
+    text = models.TextField(default="none")
+    image = models.FileField(upload_to='images/', null=True, verbose_name="") #models.TextField(default="none") # models.ImageField(upload_to='images/') --> alternatively: https://wsvincent.com/django-image-uploads/
+    date = models.CharField(max_length=255, default="none")
 
     def __str__(self):
 
@@ -35,7 +42,7 @@ class Memory(models.Model):
         def __unicode__(self):
             return self.title
 
-# associating image file path with image field https://stackoverflow.com/questions/1308386/programmatically-saving-image-to-django-imagefield
-memory = Memory()
-memory.image = "images/image.png"
-memory.save()
+# associating imagefile path with image field https://stackoverflow.com/questions/1308386/programmatically-saving-image-to-django-imagefield
+# memory = Memory()
+# memory.image = "images/image.png"
+# memory.save()

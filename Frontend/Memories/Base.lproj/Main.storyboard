@@ -269,12 +269,13 @@
                                             </textField>
                                         </subviews>
                                     </stackView>
-                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="EIg-at-7cy">
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="EIg-at-7cy" customClass="I">
                                         <rect key="frame" x="39.5" y="72" width="41" height="30"/>
                                         <fontDescription key="fontDescription" type="boldSystem" pointSize="15"/>
                                         <state key="normal" title="Login"/>
                                         <connections>
                                             <action selector="LoginButton:" destination="sRN-iz-YKH" eventType="touchUpInside" id="dYs-sa-QhK"/>
+                                            <segue destination="28c-SR-XQZ" kind="presentation" identifier="userLoggedInSegue" modalTransitionStyle="flipHorizontal" id="KtJ-r1-Mh3"/>
                                         </connections>
                                     </button>
                                 </subviews>
@@ -311,7 +312,6 @@
                                 <state key="normal" title="New User"/>
                                 <connections>
                                     <action selector="goToNewUser:" destination="sRN-iz-YKH" eventType="touchUpInside" id="ZmP-hH-qgN"/>
-                                    <segue destination="28c-SR-XQZ" kind="presentation" identifier="userLoggedInSegue" modalTransitionStyle="flipHorizontal" id="xoN-AU-HDb"/>
                                 </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="First time? Create an account here" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="nx2-CB-Fb8">
@@ -383,9 +383,8 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <stackView opaque="NO" contentMode="scaleToFill" fixedFrame="YES" axis="vertical" alignment="top" spacing="28" translatesAutoresizingMaskIntoConstraints="NO" id="4ui-CF-csu">
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="top" spacing="28" translatesAutoresizingMaskIntoConstraints="NO" id="4ui-CF-csu">
                                 <rect key="frame" x="35" y="132" width="200" height="447"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <subviews>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="sax-Lc-IxO">
                                         <rect key="frame" x="0.0" y="0.0" width="136" height="67"/>
@@ -518,15 +517,24 @@
                                     </button>
                                 </subviews>
                             </stackView>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Error field" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="iNH-MF-igd">
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Error field" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="iNH-MF-igd">
                                 <rect key="frame" x="35" y="616" width="359" height="22"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="22" id="Rbw-db-ABL"/>
+                                </constraints>
                                 <fontDescription key="fontDescription" type="system" pointSize="18"/>
                                 <color key="textColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="aJA-ce-0pT" firstAttribute="bottom" secondItem="iNH-MF-igd" secondAttribute="bottom" constant="224" id="32j-ZX-WzT"/>
+                            <constraint firstItem="iNH-MF-igd" firstAttribute="trailing" secondItem="mHM-51-9rl" secondAttribute="trailingMargin" id="3Ia-Qb-PD2"/>
+                            <constraint firstItem="iNH-MF-igd" firstAttribute="top" secondItem="4ui-CF-csu" secondAttribute="bottom" constant="37" id="Qmp-9Y-Bhe"/>
+                            <constraint firstItem="iNH-MF-igd" firstAttribute="leading" secondItem="4ui-CF-csu" secondAttribute="leading" id="Ta0-Dh-fxR"/>
+                            <constraint firstItem="iNH-MF-igd" firstAttribute="leading" secondItem="aJA-ce-0pT" secondAttribute="leading" constant="35" id="iLT-In-sKC"/>
+                        </constraints>
                         <viewLayoutGuide key="safeArea" id="aJA-ce-0pT"/>
                     </view>
                     <connections>
