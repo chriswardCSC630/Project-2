@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		07928DF22276140200A695E9 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07928DF12276140200A695E9 /* LoginViewController.swift */; };
 		07928DF422762B8A00A695E9 /* NewUserViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07928DF322762B8A00A695E9 /* NewUserViewController.swift */; };
+		07D3F9E2227BD32B00F655AC /* MyActivityIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07D3F9E1227BD32A00F655AC /* MyActivityIndicator.swift */; };
 		24A7CD27226262B400F6E7A3 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24A7CD26226262B400F6E7A3 /* AppDelegate.swift */; };
 		24A7CD29226262B400F6E7A3 /* MemoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24A7CD28226262B400F6E7A3 /* MemoryViewController.swift */; };
 		24A7CD2C226262B400F6E7A3 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 24A7CD2A226262B400F6E7A3 /* Main.storyboard */; };
@@ -35,6 +36,7 @@
 		07928DF02276046D00A695E9 /* MemoriesTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MemoriesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		07928DF12276140200A695E9 /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
 		07928DF322762B8A00A695E9 /* NewUserViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewUserViewController.swift; sourceTree = "<group>"; };
+		07D3F9E1227BD32A00F655AC /* MyActivityIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyActivityIndicator.swift; sourceTree = "<group>"; };
 		24A7CD26226262B400F6E7A3 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		24A7CD28226262B400F6E7A3 /* MemoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryViewController.swift; sourceTree = "<group>"; };
 		24A7CD2B226262B400F6E7A3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -85,6 +87,7 @@
 				24CA30502262AAF200DC7132 /* Memory.swift */,
 				24CA30562263B09E00DC7132 /* MemoryTableViewCell.swift */,
 				24CA30582263B6F400DC7132 /* MemoryTableViewController.swift */,
+				07D3F9E1227BD32A00F655AC /* MyActivityIndicator.swift */,
 				24A7CD2A226262B400F6E7A3 /* Main.storyboard */,
 				07928DF322762B8A00A695E9 /* NewUserViewController.swift */,
 				24A7CD2D226262B600F6E7A3 /* Assets.xcassets */,
@@ -208,6 +211,7 @@
 				24CA30512262AAF200DC7132 /* Memory.swift in Sources */,
 				24CA30572263B09E00DC7132 /* MemoryTableViewCell.swift in Sources */,
 				24CA30592263B6F400DC7132 /* MemoryTableViewController.swift in Sources */,
+				07D3F9E2227BD32B00F655AC /* MyActivityIndicator.swift in Sources */,
 				24A7CD29226262B400F6E7A3 /* MemoryViewController.swift in Sources */,
 				24A7CD27226262B400F6E7A3 /* AppDelegate.swift in Sources */,
 				07928DF422762B8A00A695E9 /* NewUserViewController.swift in Sources */,

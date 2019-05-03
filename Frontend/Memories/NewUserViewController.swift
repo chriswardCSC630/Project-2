@@ -9,7 +9,7 @@
 import UIKit
 import AudioToolbox
 
-class NewUserViewController: UIViewController {
+class NewUserViewController: UIViewController, UITextFieldDelegate {
 
     @IBOutlet weak var cancelButton: UIButton!
     @IBOutlet weak var saveButton: UIButton!
@@ -20,6 +20,10 @@ class NewUserViewController: UIViewController {
     @IBOutlet weak var confirmPassword: UITextField!
     @IBOutlet weak var errorLabel: UILabel!
     
+    var isAuthenticated = false
+    //    let BASE_API = "https://fullstack-project-2.herokuapp.com/"
+    let BASE_API = "http://localhost:8000/"
+    
     let badColor: UIColor = UIColor(displayP3Red: 1, green: 0, blue: 0, alpha: 0.3)
     let goodColor: UIColor = UIColor(displayP3Red: 0, green: 1, blue: 0, alpha: 0.3)
     var validFirstName: Bool = false
@@ -27,34 +31,6 @@ class NewUserViewController: UIViewController {
     var validUsername: Bool = false
     var validPassword: Bool = false
     var invalidUsernames: [String] = []
-    
-    
-    var activityIndicator = UIActivityIndicatorView()
-    var strLabel = UILabel()
-    let loadingAnimationView = UIView()
-    
-    func activityIndicator(title: String) {
-        strLabel.removeFromSuperview()
-        activityIndicator.removeFromSuperview()
-        loadingAnimationView.removeFromSuperview()
-        
-        strLabel = UILabel(frame: CGRect(x: 50, y: 0, width: 200, height: 46))
-        strLabel.text = title
-        strLabel.font = .systemFont(ofSize: 14, weight: UIFont.Weight.medium)
-        strLabel.textColor = UIColor(white: 0.9, alpha: 0.7)
-        
-        loadingAnimationView.frame = CGRect(x: view.frame.midX - strLabel.frame.width/2, y: view.frame.midY - strLabel.frame.height/2 , width: 200, height: 46)
-        loadingAnimationView.layer.cornerRadius = 15
-        loadingAnimationView.backgroundColor = UIColor(red:0.27, green:0.27, blue:0.27, alpha:0.7)
-        
-        activityIndicator = UIActivityIndicatorView(style: .white)
-        activityIndicator.frame = CGRect(x: 0, y: 0, width: 46, height: 46)
-        activityIndicator.startAnimating()
-        
-        loadingAnimationView.addSubview(activityIndicator)
-        loadingAnimationView.addSubview(strLabel)
-        self.view.addSubview(loadingAnimationView)
-    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -93,7 +69,9 @@ class NewUserViewController: UIViewController {
         let usr = username.text
         let psw = password.text
         
-        let url = URL(string: "https://fullstack-project-2.herokuapp.com/newUser/")
+        MyActivityIndicator.activityIndicator(title: "Securely creating user...", view: self.view)
+        
+        let url = URL(string: BASE_API + "newUser/")
         let session = URLSession.shared
         
         let request = NSMutableURLRequest(url: url!)
@@ -159,18 +137,20 @@ class NewUserViewController: UIViewController {
             }
             
             if status == "false" { // then there was an error: code 406
-                self.errorLabel.text = message
-                self.errorLabel.textColor = UIColor.red
+                DispatchQueue.main.async {
+                    self.errorLabel.text = message
+                    self.errorLabel.textColor = UIColor.red
+                }
+                
                 self.newUserToDo()
+                
                 return
-            }
-            
+            } else {
             // otherwise all good
-            
-            
-            DispatchQueue.main.async (
-                execute: self.newUserDone
-            )
+                DispatchQueue.main.async (
+                    execute: self.newUserDone
+                )
+            }
         }
         
         task.resume()
@@ -179,31 +159,34 @@ class NewUserViewController: UIViewController {
     
     
     func newUserToDo() {
+        self.isAuthenticated = false
         DispatchQueue.main.async {
+            MyActivityIndicator.removeAll()
             self.firstName.isEnabled = true
             self.lastName.isEnabled = true
             self.username.isEnabled = true
             self.password.isEnabled = true
             self.confirmPassword.isEnabled = true
+            self.saveButton.isEnabled = false
             if self.errorLabel.text!.contains("username") { // crude way of determining if error involves username
                 self.changeBorderColor(field: self.username, color: UIColor.red)
                 self.invalidUsernames.append(self.username.text!)
             }
+        
         }
-       
         AudioServicesPlayAlertSound(SystemSoundID(kSystemSoundID_Vibrate)) // vibrates phone
     }
     
     func newUserDone() {
+        self.isAuthenticated = true
         DispatchQueue.main.async {
+            MyActivityIndicator.removeAll()
             self.firstName.isEnabled = false
             self.lastName.isEnabled = false
             self.username.isEnabled = false
             self.password.isEnabled = false
             self.confirmPassword.isEnabled = false
         }
-
-        self.activityIndicator(title: "Securely creating user...")
 
         // Add a delay from: https://stackoverflow.com/questions/38031137/how-to-program-a-delay-in-swift-3
         DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
@@ -284,10 +267,6 @@ class NewUserViewController: UIViewController {
         }
         else {
             confirmPassword.backgroundColor = self.goodColor
-            print(self.validFirstName)
-            print(self.validLastName)
-            print(self.validUsername)
-            print(self.validPassword)
             saveButton.isEnabled = self.validFirstName && self.validLastName && self.validUsername && self.validPassword
         }
     }
@@ -302,6 +281,31 @@ class NewUserViewController: UIViewController {
     }
     
     
+    //MARK: UITextFieldDelegate
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        // implements the return key
+        if textField == firstName {
+            //change cursor from username to password textfield
+            lastName.becomeFirstResponder()
+        } else if textField == lastName {
+            username.becomeFirstResponder()
+        } else if textField == username {
+            password.becomeFirstResponder()
+        } else if textField == password {
+            confirmPassword.becomeFirstResponder()
+        } else if textField == confirmPassword {
+            saveNewUser("") // mimics the save button being pressed
+        }
+        // Hide the keyboard
+        textField.resignFirstResponder()
+        return true
+    }
+    
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        
+    }
+    
     
     /*
     // MARK: - Navigation
@@ -312,5 +316,16 @@ class NewUserViewController: UIViewController {
         // Pass the selected object to the new view controller.
     }
     */
+    
+    override func shouldPerformSegue(withIdentifier identifier: String?, sender: Any?) -> Bool {
+        if let ident = identifier {
+            if ident == "saveNewUserSegue" {
+                if !self.isAuthenticated {
+                    return false
+                }
+            }
+        }
+        return true
+    }
 
 }

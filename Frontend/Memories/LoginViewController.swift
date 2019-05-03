@@ -17,41 +17,21 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var _newUserButton: UIButton!
     @IBOutlet weak var errorLabel: UILabel!
     
-    var activityIndicator = UIActivityIndicatorView()
-    var strLabel = UILabel()
-    let loadingAnimationView = UIView()
     
-    func activityIndicator(title: String) {
-        strLabel.removeFromSuperview()
-        activityIndicator.removeFromSuperview()
-        loadingAnimationView.removeFromSuperview()
-        
-        strLabel = UILabel(frame: CGRect(x: 50, y: 0, width: 200, height: 46))
-        strLabel.text = title
-        strLabel.font = .systemFont(ofSize: 14, weight: UIFont.Weight.medium)
-        strLabel.textColor = UIColor(white: 0.9, alpha: 0.7)
-        
-        loadingAnimationView.frame = CGRect(x: view.frame.midX - strLabel.frame.width/2, y: view.frame.midY - strLabel.frame.height/2 , width: 200, height: 46)
-        loadingAnimationView.layer.cornerRadius = 15
-        loadingAnimationView.backgroundColor = UIColor(red:0.27, green:0.27, blue:0.27, alpha:0.7)
-        
-        activityIndicator = UIActivityIndicatorView(style: .white)
-        activityIndicator.frame = CGRect(x: 0, y: 0, width: 46, height: 46)
-        activityIndicator.startAnimating()
-        
-        loadingAnimationView.addSubview(activityIndicator)
-        loadingAnimationView.addSubview(strLabel)
-        self.view.addSubview(loadingAnimationView)
-    }
+    var isAuthenticated = false
+//    let BASE_API = "https://fullstack-project-2.herokuapp.com/"
+    let BASE_API = "http://localhost:8000/"
+    
+
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let preferences = UserDefaults.standard
         
-        if (preferences.object(forKey: "username") != nil) {
+        if let _ = UserDefaults.standard.data(forKey: "hash_id") {
             LoginDone()
         }
+
 
         
         _password.addTarget(self, action: #selector(updateLoginButtonState), for: .editingChanged)
@@ -97,7 +77,10 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         _username.isEnabled = false // disables both buttons
         _password.isEnabled = false
         
-        let url = URL(string: "https://fullstack-project-2.herokuapp.com/login/")
+        MyActivityIndicator.activityIndicator(title: "Securely logging in...", view: self.view)
+
+        
+        let url = URL(string: BASE_API + "login/")
         let session = URLSession.shared
         
         let request = NSMutableURLRequest(url: url!)
@@ -105,6 +88,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         let paramToSend = "username=" + user + "&password=" + psw
         request.httpBody = paramToSend.data(using: String.Encoding.utf8)
         
+        request.allHTTPHeaderFields = HTTPCookie.requestHeaderFields(with: HTTPCookieStorage.shared.cookies!) // for cookies, from http://lucasjackson.io/realtime-ios-chat-with-django/
         let task = session.dataTask(with: request as URLRequest) { // completionHandler code is implied
             (data, response, error) in
             
@@ -172,7 +156,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             
             
             let preferences = UserDefaults.standard
-            preferences.set(user, forKey: "username") // updates userDefaults to this username
+            preferences.set(server_response["hash_id"], forKey: "hash_id") // updates userDefaults to this serializer, which stores the user's hash_id
             DispatchQueue.main.async (
                 execute: self.LoginDone
             )
@@ -183,7 +167,9 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     
     func LoginToDo() {
+        self.isAuthenticated = false
         DispatchQueue.main.async {
+            MyActivityIndicator.removeAll()
             self._username.isEnabled = true
             self._password.isEnabled = true
         }
@@ -193,7 +179,9 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     }
     
     func LoginDone() {
+        self.isAuthenticated = true
         DispatchQueue.main.async {
+            MyActivityIndicator.removeAll()
             self._username.isEnabled = false
             self._password.isEnabled = false
             self._login_button.isEnabled = false
@@ -201,23 +189,42 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         changeBorderColor(field: _username, color: UIColor.green)
         changeBorderColor(field: _password, color: UIColor.green)
         
-        self.activityIndicator(title: "Securely logging in...")
-        
         // Add a delay from: https://stackoverflow.com/questions/38031137/how-to-program-a-delay-in-swift-3
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
             self.performSegue(withIdentifier: "userLoggedInSegue", sender: self)
         }
     }
     
-    /*
+    
     // MARK: - Navigation
-
+    
+    override func shouldPerformSegue(withIdentifier identifier: String?, sender: Any?) -> Bool {
+        if let ident = identifier {
+            if ident == "userLoggedInSegue" {
+                if self.isAuthenticated != true { // so that the segue won't perform if it isn't authenticated
+                    return false
+                }
+            }
+        }
+        return true
+    }
+/*
     // In a storyboard-based application, you will often want to do a little preparation before navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        super.prepare(for: segue, sender: sender)
+        
+        if segue.identifier == "userLoggedInSegue" {
+            if !self.isAuthenticated {
+                return
+            }
+        }
         // Get the new view controller using segue.destination.
         // Pass the selected object to the new view controller.
+            
     }
-    */
+ */
+    
+ 
     
     @IBAction func goToNewUser(_ sender: UIButton) {
             performSegue(withIdentifier: "newUserSegue", sender: self)
@@ -227,6 +234,14 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     //MARK: UITextFieldDelegate
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        // implements the return key
+        if textField == _username {
+            //change cursor from username to password textfield
+            _password.becomeFirstResponder()
+        } else if textField == _password {
+            //attempt to login when we press enter on password field
+            LoginButton("") // mimics the login button being pressed
+        }
         // Hide the keyboard
         textField.resignFirstResponder()
         return true

@@ -12,6 +12,9 @@ import os.log
 class MemoryTableViewController: UITableViewController {
     //MARK: Properties
     var memories =  [Memory]()
+    //    let BASE_API = "https://fullstack-project-2.herokuapp.com/"
+    let BASE_API = "http://localhost:8000/"
+    
     
     @IBOutlet weak var logoutButton: UIButton!
     // Modified viewDidLoad, saveMemories, getDocumentsDirectory, and loadMemories to solve deprecated tutorial issue based on https://stackoverflow.com/questions/53347426/ios-editor-bug-archiveddata-renamed
@@ -144,7 +147,7 @@ class MemoryTableViewController: UITableViewController {
     
     func handleLogout() {
         let preferences = UserDefaults.standard
-        preferences.removeObject(forKey: "username")
+        preferences.removeObject(forKey: "hash_id")
         self.performSegue(withIdentifier: "logoutSegue", sender: self.logoutButton)
         
     }
@@ -153,7 +156,11 @@ class MemoryTableViewController: UITableViewController {
         if let sourceViewController = sender.source as? MemoryViewController, let memory = sourceViewController.memory {
             
             let title = memory.title!
-            let photo = memory.photo!
+            let largePhoto = memory.photo!
+            print(largePhoto.size)
+            let compressData = largePhoto.jpegData(compressionQuality: 0.1) //max value is 1.0 and minimum is 0.0
+            let photo = UIImage(data: compressData!)!
+            print(photo.size)
             let text = memory.text!
             let date = memory.date!
             let id = memory.id!
@@ -163,13 +170,15 @@ class MemoryTableViewController: UITableViewController {
             let photoStringData = photoData.base64EncodedString(options: Data.Base64EncodingOptions.lineLength64Characters)
         
             if let selectedIndexPath = tableView.indexPathForSelectedRow {
+                MyActivityIndicator.activityIndicator(title: "Updating memory...", view: self.view)
+
                 // PATCH the memory to the database
                 
                 // paramToSend broken up to allow compiler to check code: error "The compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions" was previously recieved
                 let param1 = "title=" + title + "&photo=" + photoStringData
                 let param2 = "&text=" + text + "&date=" + date + "&id=" + id
                 let paramToSend = param1 + param2
-                makeURLRequest(urlString: "https://fullstack-project-2.herokuapp.com/memories/", method: "PATCH", paramToSend: paramToSend, memory: memory)
+                makeURLRequest(urlString: BASE_API + "/memories/", method: "PATCH", paramToSend: paramToSend, memory: memory)
                 // Update an existing memory.
                 memories[selectedIndexPath.row] = memory // test this later, we may need to actually save the new memory if it's not just a reference
                 tableView.reloadRows(at: [selectedIndexPath], with: .none)
@@ -177,12 +186,15 @@ class MemoryTableViewController: UITableViewController {
             } else {
                 // POST the memory to the database
                 
+                MyActivityIndicator.activityIndicator(title: "Saving memory...", view: self.view)
+
+                
                 // paramToSend broken up to allow compiler to check code: error "The compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions" was previously recieved
                 let param1 = "title=" + title + "&photo=" + photoStringData
                 let param2 = "&text=" + text + "&date=" + date
                 let paramToSend = param1 + param2
                 
-                makeURLRequest(urlString: "https://fullstack-project-2.herokuapp.com/memories/", method: "POST", paramToSend: paramToSend, memory: memory)
+                makeURLRequest(urlString: BASE_API + "memories/", method: "POST", paramToSend: paramToSend, memory: memory)
                 
                 // Add a new memory.
                 let newIndexPath = IndexPath(row: memories.count, section: 0)
@@ -193,18 +205,7 @@ class MemoryTableViewController: UITableViewController {
     }
     
     //MARK: Private Methods
-    
-    private func saveMemories() {
-//        let fullPath = getDocumentsDirectory().appendingPathComponent("memories")
-//        
-//        do {
-//            let data = try NSKeyedArchiver.archivedData(withRootObject: memories, requiringSecureCoding: false)
-//            try data.write(to: fullPath)
-//            os_log("Memories successfully saved.", log: OSLog.default, type: .debug)
-//        } catch {
-//            os_log("Failed to save memories...", log: OSLog.default, type: .error)
-//        }
-    }
+
     
     private func updateMemoryID(serverResponse: NSDictionary, memory: Memory){
         guard let id = serverResponse["id"] as? String else {
@@ -212,13 +213,16 @@ class MemoryTableViewController: UITableViewController {
             return
         }
         memory.id = id
+        DispatchQueue.main.async {
+            MyActivityIndicator.removeAll()
+        }
     }
     
     
     private func loadMemories() {
-    
+        MyActivityIndicator.activityIndicator(title: "Retrieving memories...", view: self.view)
         // GET the memories from the database
-        makeURLRequest(urlString: "https://fullstack-project-2.herokuapp.com/memories/", method: "GET")
+        makeURLRequest(urlString: BASE_API + "memories/", method: "GET")
             
     }
     
@@ -259,7 +263,10 @@ class MemoryTableViewController: UITableViewController {
             memories.append(memory!)
         }
         
-        tableView.reloadData()
+        DispatchQueue.main.async {
+            self.tableView.reloadData()
+            MyActivityIndicator.removeAll()
+        }
         
     }
     
@@ -268,17 +275,18 @@ class MemoryTableViewController: UITableViewController {
         let paramToSend = "id=" + memory.id!
         
         // DELETE the memory from the database
-        makeURLRequest(urlString: "https://fullstack-project-2.herokuapp.com/memories/", method: "DELETE", paramToSend: paramToSend, memory: memory)
+        makeURLRequest(urlString: self.BASE_API + "memories/", method: "DELETE", paramToSend: paramToSend, memory: memory)
     
     }
     
     func makeURLRequest(urlString: String, method: String, paramToSend: String? = "", memory: Memory? = nil) {
+        
         let url = URL(string: urlString)
         let session = URLSession.shared
         
         
         let request = NSMutableURLRequest(url: url!)
-        
+        request.allHTTPHeaderFields = HTTPCookie.requestHeaderFields(with: HTTPCookieStorage.shared.cookies!) // for cookies, from http://lucasjackson.io/realtime-ios-chat-with-django/
         // PATCH the memory to the database
         request.httpMethod = method
         
@@ -295,11 +303,17 @@ class MemoryTableViewController: UITableViewController {
             guard error == nil else {
                 print("error retrieving data from server, error:")
                 print(error as Any)
+                DispatchQueue.main.async {
+                    MyActivityIndicator.removeAll()
+                }
                 return
             }
             // make sure we got data
             guard let responseData = data else {
                 print("Error: did not receive data")
+                DispatchQueue.main.async {
+                    MyActivityIndicator.removeAll()
+                }
                 return
             }
             
@@ -310,11 +324,17 @@ class MemoryTableViewController: UITableViewController {
             catch {
                 print("error trying to convert data to JSON")
                 print(String(data: responseData, encoding: String.Encoding.utf8) ?? "[data not convertible to string]")
+                DispatchQueue.main.async {
+                    MyActivityIndicator.removeAll()
+                }
                 return
             }
             
             guard let serverResponse = json as? NSDictionary else {
                 print("error trying to convert data to NSDictionary")
+                DispatchQueue.main.async {
+                    MyActivityIndicator.removeAll()
+                }
                 return
             }
             
@@ -324,16 +344,23 @@ class MemoryTableViewController: UITableViewController {
             else if (method == "POST") {
                 if memory == nil {
                     print("Memory passed in incompatible format -- POST")
+                    DispatchQueue.main.async {
+                        MyActivityIndicator.removeAll()
+                    }
                     return
                 }
                 self.updateMemoryID(serverResponse: serverResponse, memory: memory!)
             }
             else if (method == "PATCH") {
+                MyActivityIndicator.removeAll()
                 return
             }
             else if (method == "DELETE") {
+                MyActivityIndicator.removeAll()
                 return
             }
+            
+            
         }
         task.resume()
     }
