@@ -15,6 +15,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from API_proj2app.views import *
+from django.conf import settings # for imagefield
+from django.urls import path, include # for imagefield
+from django.conf.urls.static import static # for imagefield
 
 
 # Fairly standard url requests
@@ -25,3 +28,7 @@ urlpatterns = [
     path('newUser/', requestHandlers.newUser),
     path('memories/', requestHandlers.handleMemories)
 ]
+
+# for imagefield (redirect): https://wsvincent.com/django-image-uploads/
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

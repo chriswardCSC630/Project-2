@@ -4,6 +4,7 @@ from decimal import Decimal
 from django.contrib.auth.models import User
 import urllib
 import json
+from django.core.files import File
 # helpful link: https://www.digitalocean.com/community/tutorials/how-to-create-django-models
 # The User model. The user_id is automatically generated
 class User(models.Model):
@@ -15,11 +16,12 @@ class User(models.Model):
     def __str__(self):
         return self.username + " (name: " + self.firstname + " " + self.lastname + ")"
 
+
 class Memory(models.Model):
     username = models.CharField(max_length=30)
     title = models.CharField(max_length=255)
     text = models.TextField()
-    image = models.TextField() # models.ImageField(upload_to='images/') --> alternatively: https://wsvincent.com/django-image-uploads/
+    image = models.ImageField(upload_to='images/') #how to use imagefield: https://wsvincent.com/django-image-uploads/
     date = models.CharField(max_length=255)
 
     def __str__(self):
@@ -32,3 +34,8 @@ class Memory(models.Model):
 
         def __unicode__(self):
             return self.title
+
+# associating image file path with image field https://stackoverflow.com/questions/1308386/programmatically-saving-image-to-django-imagefield
+memory = Memory()
+memory.image = "images/image.png"
+memory.save()
